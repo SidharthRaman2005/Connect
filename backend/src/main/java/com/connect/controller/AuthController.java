@@ -1,5 +1,8 @@
 package com.connect.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +12,8 @@ import com.connect.dto.AuthResponse;
 import com.connect.dto.GoogleLoginRequest;
 import com.connect.dto.StudentDto;
 import com.connect.dto.VerifiedUser;
+import com.connect.entity.Student;
+import com.connect.security.AuthenticatedStudent;
 import com.connect.service.GoogleTokenVerifierService;
 import com.connect.service.JwtService;
 import com.connect.service.StudentService;
@@ -44,5 +49,22 @@ public class AuthController {
         StudentService.AuthResult result = studentService.createOrAuthenticate(verifiedUser);
         String token = jwtService.issueToken(result.student());
         return new AuthResponse(token, result.newAccount(), StudentDto.from(result.student()));
+    }
+
+    /** Returns the currently authenticated student. Requires a valid JWT. */
+    @GetMapping("/me")
+    public StudentDto me(@AuthenticationPrincipal AuthenticatedStudent principal) {
+        Student student = studentService.getById(principal.id());
+        return StudentDto.from(student);
+    }
+
+    /**
+     * Logout. With stateless JWTs there is no server session to destroy, so the
+     * client simply discards its token. The endpoint exists for symmetry and as
+     * a hook for future server-side revocation.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
     }
 }

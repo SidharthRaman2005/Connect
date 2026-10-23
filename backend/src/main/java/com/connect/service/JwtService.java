@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import com.connect.config.AuthProperties;
 import com.connect.entity.Student;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -60,5 +62,15 @@ public class JwtService {
     /** Seconds until an issued token expires (useful for the client). */
     public long getExpirationSeconds() {
         return expirationSeconds;
+    }
+
+    /**
+     * Parses and validates a token, verifying its signature and expiry.
+     *
+     * @throws io.jsonwebtoken.JwtException if the token is invalid, tampered
+     *                                      with, or expired
+     */
+    public Jws<Claims> parse(String token) {
+        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
     }
 }

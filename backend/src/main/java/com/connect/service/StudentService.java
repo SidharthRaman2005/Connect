@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.connect.dto.VerifiedUser;
 import com.connect.entity.Student;
+import com.connect.exception.ResourceNotFoundException;
 import com.connect.repository.StudentRepository;
 
 /**
@@ -57,5 +58,16 @@ public class StudentService {
         student.setLastLoginAt(Instant.now());
 
         return new AuthResult(studentRepository.save(student), newAccount);
+    }
+
+    /**
+     * Loads a student by id.
+     *
+     * @throws ResourceNotFoundException if no such student exists
+     */
+    @Transactional(readOnly = true)
+    public Student getById(Long id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found."));
     }
 }

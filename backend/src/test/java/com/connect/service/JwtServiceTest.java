@@ -15,8 +15,11 @@ import org.junit.jupiter.api.Test;
 import com.connect.config.AuthProperties;
 import com.connect.entity.Student;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -49,5 +52,27 @@ class JwtServiceTest {
         assertThat(claims.getSubject()).isEqualTo("42");
         assertThat(claims.get("email", String.class)).isEqualTo("student@vitapstudent.ac.in");
         assertThat(claims.getExpiration()).isAfter(new Date());
+    }
+
+    @Test
+    void parseAcceptsTokenItIssued() {
+        Student student = mock(Student.class);
+        when(student.getId()).thenReturn(7L);
+        when(student.getEmail()).thenReturn("x@vitapstudent.ac.in");
+
+        String token = jwtService.issueToken(student);
+
+        assertThat(jwtService.parse(token).getPayload().getSubject()).isEqualTo("7");
+    }
+
+    @Test
+    void parseRejectsTamperedToken() {
+        Student student = mock(Student.class);
+        when(student.getId()).thenReturn(7L);
+        when(student.getEmail()).thenReturn("x@vitapstudent.ac.in");
+
+        String tampered = jwtService.issueToken(student) + "tamper";
+
+        assertThatThrownBy(() -> jwtService.parse(tampered)).isInstanceOf(JwtException.class);
     }
 }
