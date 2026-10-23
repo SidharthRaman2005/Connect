@@ -25,7 +25,8 @@ class GoogleTokenVerifierServiceTest {
     @BeforeEach
     void setUp() {
         AuthProperties props = new AuthProperties(
-                "test-client-id.apps.googleusercontent.com", "vitapstudent.ac.in");
+                "test-client-id.apps.googleusercontent.com", "vitapstudent.ac.in",
+                "unit-test-secret-key-at-least-32-bytes-long!!", 3600);
         service = new GoogleTokenVerifierService(props);
     }
 

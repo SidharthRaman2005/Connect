@@ -38,6 +38,11 @@ app:
   auth:
     google-client-id: ${GOOGLE_CLIENT_ID:504517063945-pno4gnbnrtf74av9409tvi1am8vglt7t.apps.googleusercontent.com}
     allowed-email-domain: ${ALLOWED_EMAIL_DOMAIN:vitapstudent.ac.in}
+    # HMAC secret for signing session JWTs. If blank, an ephemeral key is
+    # generated at startup (fine for dev, but sessions reset on restart).
+    # Set JWT_SECRET (>= 32 chars) in backend/.env for stable sessions.
+    jwt-secret: ${JWT_SECRET:}
+    jwt-expiration-seconds: ${JWT_EXPIRATION_SECONDS:86400}
 
 # Expose a minimal set of actuator endpoints; health is handy for probes.
 management:

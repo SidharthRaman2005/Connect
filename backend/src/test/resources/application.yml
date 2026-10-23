@@ -16,3 +16,5 @@ app:
   auth:
     google-client-id: test-client-id.apps.googleusercontent.com
     allowed-email-domain: vitapstudent.ac.in
+    jwt-secret: test-jwt-secret-that-is-at-least-32-bytes-long!!
+    jwt-expiration-seconds: 3600
