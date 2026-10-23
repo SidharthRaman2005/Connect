@@ -1,5 +1,3 @@
-
-import { GoogleLogin } from "@react-oauth/google";
 function About() {
   return (
     <div>
