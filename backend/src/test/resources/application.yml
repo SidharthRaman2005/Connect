@@ -1,0 +1,18 @@
+# Test-only configuration. Uses an in-memory H2 database so tests run without
+# a live PostgreSQL instance. These values override the main application.yml.
+spring:
+  datasource:
+    url: jdbc:h2:mem:connect-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+# Auth config for the test context (the test application.yml fully overrides
+# the main one, so these must be repeated here).
+app:
+  auth:
+    google-client-id: test-client-id.apps.googleusercontent.com
+    allowed-email-domain: vitapstudent.ac.in

@@ -1,0 +1,24 @@
+# --- Secrets / local env ---
+# The real .env files hold credentials and must never be committed.
+backend/.env
+*.local
+application-local.yml
+application-local.yaml
+application-local.properties
+
+# --- Backend (Maven / Java) ---
+backend/target/
+*.class
+
+# --- Frontend (Node) ---
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.log
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
