@@ -10,6 +10,7 @@ import com.connect.dto.VerifiedUser;
 import com.connect.entity.Student;
 import com.connect.exception.ResourceNotFoundException;
 import com.connect.repository.StudentRepository;
+import com.connect.util.BatchParser;
 
 /**
  * Creates and authenticates {@link Student} accounts from a verified Google
@@ -56,6 +57,12 @@ public class StudentService {
         student.setName(verifiedUser.name());
         student.setPictureUrl(verifiedUser.picture());
         student.setLastLoginAt(Instant.now());
+
+        // Derive the batch from the email if not already set (also backfills
+        // accounts created before M2.1).
+        if (student.getBatch() == null) {
+            student.setBatch(BatchParser.parseBatch(student.getEmail()));
+        }
 
         return new AuthResult(studentRepository.save(student), newAccount);
     }

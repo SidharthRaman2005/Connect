@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,6 +41,24 @@ public class Student {
 
     @Column(name = "picture_url")
     private String pictureUrl;
+
+    // --- Profile fields (M2.1) ---
+
+    /** Admission year derived from the email's leading digits (e.g. 26). */
+    @Column(name = "batch")
+    private Integer batch;
+
+    /** Academic branch, e.g. "CSE". Set by the student during onboarding. */
+    @Column(name = "branch", length = 100)
+    private String branch;
+
+    @Column(name = "bio", length = 1000)
+    private String bio;
+
+    /** Who may view the full profile. Treated as PUBLIC when null (legacy rows). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_visibility", length = 20)
+    private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
 
     /** False until the student finishes onboarding (set in Phase 2). */
     @Column(name = "profile_completed", nullable = false)
@@ -103,6 +123,38 @@ public class Student {
 
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
+    }
+
+    public Integer getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Integer batch) {
+        this.batch = batch;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public ProfileVisibility getProfileVisibility() {
+        return profileVisibility;
+    }
+
+    public void setProfileVisibility(ProfileVisibility profileVisibility) {
+        this.profileVisibility = profileVisibility;
     }
 
     public boolean isProfileCompleted() {
