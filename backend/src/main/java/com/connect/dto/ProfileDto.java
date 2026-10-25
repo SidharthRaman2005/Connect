@@ -1,5 +1,7 @@
 package com.connect.dto;
 
+import java.util.List;
+
 import com.connect.entity.ProfileVisibility;
 import com.connect.entity.Student;
 
@@ -17,6 +19,7 @@ public record ProfileDto(
         String branch,
         String bio,
         ProfileVisibility visibility,
+        List<TagDto> tags,
         boolean profileCompleted) {
 
     public static ProfileDto from(Student student) {
@@ -29,6 +32,7 @@ public record ProfileDto(
                 student.getBranch(),
                 student.getBio(),
                 student.getProfileVisibility(),
+                TagDto.sortedListFrom(student.getTags()),
                 student.isProfileCompleted());
     }
 }

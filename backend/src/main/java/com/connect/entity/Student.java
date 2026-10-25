@@ -1,14 +1,20 @@
 package com.connect.entity;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -39,7 +45,7 @@ public class Student {
     @Column
     private String name;
 
-    @Column(name = "picture_url")
+    @Column(name = "picture_url", length = 512)
     private String pictureUrl;
 
     // --- Profile fields (M2.1) ---
@@ -59,6 +65,18 @@ public class Student {
     @Enumerated(EnumType.STRING)
     @Column(name = "profile_visibility", length = 20)
     private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
+
+    /**
+     * The approved skill/interest/club tags on this profile (M2.3). Only
+     * {@link TagStatus#APPROVED} tags are ever attached; this is enforced in the
+     * service, not the schema. Lazily loaded; map to DTOs within a transaction.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "student_tags",
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new LinkedHashSet<>();
 
     /** False until the student finishes onboarding (set in Phase 2). */
     @Column(name = "profile_completed", nullable = false)
@@ -155,6 +173,11 @@ public class Student {
 
     public void setProfileVisibility(ProfileVisibility profileVisibility) {
         this.profileVisibility = profileVisibility;
+    }
+
+    /** The attached tags. Mutate this set in place (clear/addAll) when updating. */
+    public Set<Tag> getTags() {
+        return tags;
     }
 
     public boolean isProfileCompleted() {

@@ -1,5 +1,7 @@
 package com.connect.dto;
 
+import java.util.List;
+
 import com.connect.entity.Student;
 
 /**
@@ -12,7 +14,8 @@ public record PublicProfileDto(
         String pictureUrl,
         Integer batch,
         String branch,
-        String bio) {
+        String bio,
+        List<TagDto> tags) {
 
     public static PublicProfileDto from(Student student) {
         return new PublicProfileDto(
@@ -21,6 +24,7 @@ public record PublicProfileDto(
                 student.getPictureUrl(),
                 student.getBatch(),
                 student.getBranch(),
-                student.getBio());
+                student.getBio(),
+                TagDto.sortedListFrom(student.getTags()));
     }
 }

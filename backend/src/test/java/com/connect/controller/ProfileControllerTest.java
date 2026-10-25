@@ -1,20 +1,35 @@
 package com.connect.controller;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.connect.entity.ProfileVisibility;
 import com.connect.entity.Student;
+import com.connect.entity.Tag;
+import com.connect.entity.TagCategory;
+import com.connect.entity.TagStatus;
 import com.connect.repository.StudentRepository;
+import com.connect.repository.TagRepository;
 import com.connect.service.JwtService;
 
 /**
@@ -26,6 +41,14 @@ import com.connect.service.JwtService;
 @AutoConfigureMockMvc
 class ProfileControllerTest {
 
+    @TempDir
+    static Path uploadsDir;
+
+    @DynamicPropertySource
+    static void uploadsProperty(DynamicPropertyRegistry registry) {
+        registry.add("app.uploads.dir", () -> uploadsDir.toString());
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -33,7 +56,15 @@ class ProfileControllerTest {
     private StudentRepository studentRepository;
 
     @Autowired
+    private TagRepository tagRepository;
+
+    @Autowired
     private JwtService jwtService;
+
+    private Tag approvedTag(TagCategory category) {
+        return tagRepository.findByCategoryAndStatusOrderByNameAsc(category, TagStatus.APPROVED)
+                .get(0); // seeded by TagSeeder when the context starts
+    }
 
     /**
      * Persists a student. The {@code key} is used to keep the Google id and
@@ -100,6 +131,107 @@ class ProfileControllerTest {
                         .content("{\"branch\":\"\",\"bio\":\"x\",\"visibility\":\"PUBLIC\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void updateMyTagsAttachesApprovedTagsAndReturnsThemOnProfile() throws Exception {
+        Student me = save("me-tags", ProfileVisibility.PUBLIC);
+        Tag skill = approvedTag(TagCategory.SKILL);
+        Tag club = approvedTag(TagCategory.CLUB);
+        String token = tokenFor(me);
+
+        mockMvc.perform(put("/api/profile/me/tags")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tagIds\":[" + skill.getId() + "," + club.getId() + "]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags[*].name", hasItem(skill.getName())))
+                .andExpect(jsonPath("$.tags[*].name", hasItem(club.getName())));
+
+        // Persisted: GET /me reflects the attached tags.
+        mockMvc.perform(get("/api/profile/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags[*].name", hasItem(skill.getName())));
+    }
+
+    @Test
+    void updateMyTagsWithEmptyListClearsTags() throws Exception {
+        Student me = save("me-tags-clear", ProfileVisibility.PUBLIC);
+        Tag skill = approvedTag(TagCategory.SKILL);
+        String token = tokenFor(me);
+
+        mockMvc.perform(put("/api/profile/me/tags")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tagIds\":[" + skill.getId() + "]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags.length()").value(1));
+
+        mockMvc.perform(put("/api/profile/me/tags")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tagIds\":[]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags.length()").value(0));
+    }
+
+    @Test
+    void updateMyTagsRejectsUnknownTagId() throws Exception {
+        Student me = save("me-tags-bad", ProfileVisibility.PUBLIC);
+
+        mockMvc.perform(put("/api/profile/me/tags")
+                        .header("Authorization", "Bearer " + tokenFor(me))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tagIds\":[99999999]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void updateMyTagsRequiresAuth() throws Exception {
+        mockMvc.perform(put("/api/profile/me/tags")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tagIds\":[]}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void uploadAndDeletePicture() throws Exception {
+        Student me = save("me-pic", ProfileVisibility.PUBLIC);
+        String token = tokenFor(me);
+        MockMultipartFile image =
+                new MockMultipartFile("file", "p.png", "image/png", new byte[] {1, 2, 3, 4});
+
+        mockMvc.perform(multipart("/api/profile/me/picture").file(image)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pictureUrl", startsWith("/uploads/")));
+
+        mockMvc.perform(delete("/api/profile/me/picture")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pictureUrl").value(nullValue()));
+    }
+
+    @Test
+    void uploadPictureRejectsNonImage() throws Exception {
+        Student me = save("me-pic-bad", ProfileVisibility.PUBLIC);
+        MockMultipartFile notImage =
+                new MockMultipartFile("file", "x.txt", "text/plain", "hello".getBytes());
+
+        mockMvc.perform(multipart("/api/profile/me/picture").file(notImage)
+                        .header("Authorization", "Bearer " + tokenFor(me)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void uploadPictureRequiresAuth() throws Exception {
+        MockMultipartFile image =
+                new MockMultipartFile("file", "p.png", "image/png", new byte[] {1, 2, 3});
+
+        mockMvc.perform(multipart("/api/profile/me/picture").file(image))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

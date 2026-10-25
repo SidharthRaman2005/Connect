@@ -72,6 +72,17 @@ export function AuthProvider({ children }) {
     return res;
   }, []);
 
+  /** Re-fetch the current student (e.g. after completing the profile). */
+  const refresh = useCallback(async () => {
+    try {
+      const me = await api.get("/auth/me");
+      setStudent(me);
+      return me;
+    } catch {
+      return null;
+    }
+  }, []);
+
   /** Clear the local session (and best-effort notify the backend). */
   const logout = useCallback(async () => {
     try {
@@ -88,6 +99,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(student),
     login,
     logout,
+    refresh,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,6 +3,8 @@ import Login from "./pages/Login";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
+import Profile from "./pages/Profile";
+import StudentProfile from "./pages/StudentProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -23,6 +25,22 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/students/:id"
+        element={
+          <ProtectedRoute>
+            <StudentProfile />
           </ProtectedRoute>
         }
       />

@@ -6,6 +6,21 @@
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
+// The backend origin without the trailing "/api" — used to resolve relative
+// media paths (e.g. uploaded profile pictures served at /uploads/...).
+const API_ORIGIN = BASE_URL.replace(/\/api\/?$/, "");
+
+/**
+ * Resolve an image path from the backend into a URL usable in <img src>.
+ * Absolute URLs (e.g. Google avatars) are returned unchanged; relative paths
+ * like "/uploads/x.png" are prefixed with the backend origin.
+ */
+export function resolveMediaUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
 let authToken = null;
 
 /** Set (or clear, with null) the token sent on subsequent requests. */

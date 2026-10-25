@@ -2,6 +2,12 @@ spring:
   application:
     name: connect-backend
 
+  # Uploaded profile pictures are capped at 2 MB (see FileStorageService).
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
   # --- Database connection ---
   # Values are read from the environment (see backend/.env, which is loaded
   # automatically by spring-dotenv). Never hardcode credentials here.
@@ -33,6 +39,10 @@ app:
   # Override per environment with the APP_CORS_ALLOWED_ORIGINS env var.
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # Directory where uploaded profile pictures are stored and served from
+  # (/uploads/**). Relative to the backend working directory by default.
+  uploads:
+    dir: ${APP_UPLOADS_DIR:uploads}
   # Authentication settings. The Google OAuth client ID is the token audience
   # the backend accepts; it must match the one the frontend signs in with.
   auth:
