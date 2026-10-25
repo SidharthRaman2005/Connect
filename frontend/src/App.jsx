@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
 import StudentProfile from "./pages/StudentProfile";
+import Search from "./pages/Search";
+import Connections from "./pages/Connections";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -41,6 +43,22 @@ function App() {
         element={
           <ProtectedRoute>
             <StudentProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <Search />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/connections"
+        element={
+          <ProtectedRoute>
+            <Connections />
           </ProtectedRoute>
         }
       />

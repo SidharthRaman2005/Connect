@@ -1,84 +1,127 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { resolveMediaUrl } from "../lib/api";
+import { api, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import StudentCard from "../components/StudentCard";
+import NotificationBell from "../components/NotificationBell";
 
 /**
- * Authenticated landing. Links to the profile editor (M2.1–M2.3) and provides a
- * quick way to open another student's public profile by id, for testing the
- * visibility-aware profile view.
+ * Home after sign-in. Shows the student's own header, navigation, and a
+ * discovery feed of other students ranked by shared tags (M3.1) — so people
+ * show up without searching. Connecting is done inline on each card (M3.2).
  */
 export default function Dashboard() {
   const { student, logout } = useAuth();
   const navigate = useNavigate();
-  const [lookupId, setLookupId] = useState("");
+
+  const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/discover")
+      .then((list) => active && setFeed(list || []))
+      .catch((e) => active && setError(e.message || "Failed to load suggestions."))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const connect = useCallback(async (id) => {
+    setBusyId(id);
+    try {
+      await api.post("/connections", { addresseeId: id });
+      setFeed((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, relation: "PENDING_OUTGOING" } : c))
+      );
+    } catch (e) {
+      setError(e.message || "Could not send request.");
+    } finally {
+      setBusyId(null);
+    }
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate("/", { replace: true });
   };
 
-  const handleLookup = (e) => {
-    e.preventDefault();
-    const id = lookupId.trim();
-    if (id) navigate(`/students/${id}`);
-  };
-
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        {student.pictureUrl && (
-          <img
-            src={resolveMediaUrl(student.pictureUrl)}
-            alt=""
-            width={48}
-            height={48}
-            style={{ borderRadius: "50%", objectFit: "cover" }}
-            referrerPolicy="no-referrer"
-          />
-        )}
-        <div>
-          <h1 style={{ margin: 0 }}>Welcome, {student.name || "student"}</h1>
-          <p style={{ margin: "0.25rem 0 0", color: "#555" }}>{student.email}</p>
-          <p style={{ margin: "0.1rem 0 0", color: "#999", fontSize: "0.85rem" }}>
-            Your student id: {student.id}
-          </p>
+    <div style={styles.page}>
+      <header style={styles.header}>
+        <div style={styles.ident}>
+          {student.pictureUrl && (
+            <img
+              src={resolveMediaUrl(student.pictureUrl)}
+              alt=""
+              width={44}
+              height={44}
+              style={{ borderRadius: "50%", objectFit: "cover" }}
+              referrerPolicy="no-referrer"
+            />
+          )}
+          <div>
+            <strong>{student.name || "student"}</strong>
+            <div style={{ color: "#777", fontSize: "0.85rem" }}>{student.email}</div>
+          </div>
         </div>
-      </div>
-
-      <p style={{ marginTop: "1.5rem" }}>
-        <Link to="/profile">View &amp; edit your profile →</Link>
-      </p>
-
-      <form onSubmit={handleLookup} style={{ marginTop: "1.5rem" }}>
-        <label style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem" }}>
-          Open a student's public profile{" "}
-          <span style={{ fontWeight: 400, color: "#999" }}>
-            (try your own id, {student.id})
-          </span>
-        </label>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <input
-            value={lookupId}
-            onChange={(e) => setLookupId(e.target.value)}
-            placeholder="Student id, e.g. 1"
-            inputMode="numeric"
-            style={{
-              flex: 1,
-              padding: "0.5rem 0.65rem",
-              border: "1px solid #ccc",
-              borderRadius: 8,
-            }}
-          />
-          <button type="submit" style={{ padding: "0.5rem 1rem", borderRadius: 8 }}>
-            View
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <NotificationBell />
+          <button onClick={handleLogout} style={styles.logout}>Log out</button>
         </div>
-      </form>
+      </header>
 
-      <button onClick={handleLogout} style={{ marginTop: "2rem", padding: "0.5rem 1rem" }}>
-        Log out
-      </button>
+      <nav style={styles.nav}>
+        <Link to="/profile" style={styles.navLink}>My profile</Link>
+        <Link to="/search" style={styles.navLink}>Find people</Link>
+        <Link to="/connections" style={styles.navLink}>Connections</Link>
+      </nav>
+
+      <h2 style={{ marginBottom: "0.25rem" }}>Suggested for you</h2>
+      <p style={{ marginTop: 0, color: "#777" }}>Students who share your skills, interests, and clubs.</p>
+
+      {error && <p style={styles.error} role="alert">{error}</p>}
+      {loading ? (
+        <p style={{ color: "#777" }}>Loading…</p>
+      ) : feed.length === 0 ? (
+        <p style={{ color: "#777" }}>
+          No suggestions yet. Add tags on <Link to="/profile">your profile</Link> or{" "}
+          <Link to="/search">search for people</Link>.
+        </p>
+      ) : (
+        <div style={styles.grid}>
+          {feed.map((card) => (
+            <StudentCard key={card.id} card={card} onConnect={connect} busy={busyId === card.id} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+const styles = {
+  page: { maxWidth: 760, margin: "0 auto", padding: "2rem" },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "1.25rem",
+  },
+  ident: { display: "flex", alignItems: "center", gap: "0.75rem" },
+  logout: { padding: "0.45rem 0.9rem", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" },
+  nav: {
+    display: "flex",
+    gap: "1rem",
+    padding: "0.75rem 0",
+    borderTop: "1px solid #eee",
+    borderBottom: "1px solid #eee",
+    marginBottom: "1.5rem",
+  },
+  navLink: { color: "#1a73e8", textDecoration: "none", fontWeight: 600 },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" },
+  error: { color: "#c0271c" },
+};

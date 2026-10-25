@@ -43,6 +43,12 @@ app:
   # (/uploads/**). Relative to the backend working directory by default.
   uploads:
     dir: ${APP_UPLOADS_DIR:uploads}
+  # Development helpers. Disable both in production.
+  dev:
+    # Seed dummy students on startup (for discovery/search/connection testing).
+    seed-dummies: ${APP_DEV_SEED_DUMMIES:true}
+    # Expose /api/dev/** helper endpoints (e.g. simulate incoming requests).
+    seed-enabled: ${APP_DEV_SEED_ENABLED:true}
   # Authentication settings. The Google OAuth client ID is the token audience
   # the backend accepts; it must match the one the frontend signs in with.
   auth:

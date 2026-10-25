@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import com.connect.repository.TagRepository;
  * schema when migrations are introduced.
  */
 @Component
+@Order(1) // run before DevDataSeeder so dummy students can reference seeded tags
 public class TagSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(TagSeeder.class);

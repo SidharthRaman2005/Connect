@@ -13,6 +13,21 @@ export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [connecting, setConnecting] = useState(false);
+  const [connectMsg, setConnectMsg] = useState("");
+
+  const connect = async () => {
+    setConnecting(true);
+    setConnectMsg("");
+    try {
+      await api.post("/connections", { addresseeId: Number(id) });
+      setConnectMsg("Connection request sent.");
+    } catch (e) {
+      setConnectMsg(e.message || "Could not send request.");
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -50,28 +65,74 @@ export default function StudentProfile() {
         <p style={{ color: "#c0271c", marginTop: "1.5rem" }} role="alert">{error}</p>
       ) : (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "1rem" }}>
-            {profile.pictureUrl && (
+          <div style={{ textAlign: "center", marginTop: "1rem" }}>
+            {profile.pictureUrl ? (
               <img
                 src={resolveMediaUrl(profile.pictureUrl)}
-                alt=""
-                width={56}
-                height={56}
-                style={{ borderRadius: "50%", objectFit: "cover" }}
+                alt={profile.name || "Student"}
+                style={{
+                  width: 220,
+                  height: 220,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                }}
                 referrerPolicy="no-referrer"
               />
+            ) : (
+              <div
+                style={{
+                  width: 220,
+                  height: 220,
+                  borderRadius: "50%",
+                  margin: "0 auto",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "5rem",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textTransform: "uppercase",
+                  background: "linear-gradient(135deg, #1a73e8, #6aa8ff)",
+                }}
+              >
+                {(profile.name || "?").charAt(0)}
+              </div>
             )}
-            <div>
-              <h1 style={{ margin: 0 }}>{profile.name || "Student"}</h1>
-              <p style={{ margin: "0.25rem 0 0", color: "#555" }}>
-                {[profile.branch, profile.batch && `Batch ${profile.batch}`]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
+            <h1 style={{ margin: "1rem 0 0" }}>{profile.name || "Student"}</h1>
+            <p style={{ margin: "0.25rem 0 0", color: "#555" }}>
+              {[profile.branch, profile.batch && `Batch ${profile.batch}`]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+
+            <div style={{ marginTop: "1rem" }}>
+              <button
+                type="button"
+                onClick={connect}
+                disabled={connecting}
+                style={{
+                  padding: "0.6rem 1.6rem",
+                  border: "none",
+                  borderRadius: 10,
+                  background: "#1a73e8",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                }}
+              >
+                {connecting ? "Sending…" : "Connect"}
+              </button>
+              {connectMsg && (
+                <div style={{ marginTop: "0.5rem", color: "#555" }}>{connectMsg}</div>
+              )}
             </div>
           </div>
 
-          {profile.bio && <p style={{ marginTop: "1.25rem", lineHeight: 1.6 }}>{profile.bio}</p>}
+          {profile.bio && (
+            <p style={{ marginTop: "1.5rem", lineHeight: 1.6, textAlign: "center" }}>{profile.bio}</p>
+          )}
 
           {["SKILL", "INTEREST", "CLUB"].map((category) =>
             groups[category]?.length ? (
