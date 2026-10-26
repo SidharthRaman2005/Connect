@@ -13,6 +13,7 @@ export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [highlights, setHighlights] = useState([]);
   const [connecting, setConnecting] = useState(false);
   const [connectMsg, setConnectMsg] = useState("");
 
@@ -45,6 +46,10 @@ export default function StudentProfile() {
         else setError(e.message || "Failed to load profile.");
       })
       .finally(() => active && setLoading(false));
+    api
+      .get(`/students/${id}/highlights`)
+      .then((h) => active && setHighlights(h || []))
+      .catch(() => active && setHighlights([]));
     return () => {
       active = false;
     };
@@ -158,6 +163,33 @@ export default function StudentProfile() {
                 </div>
               </div>
             ) : null
+          )}
+
+          {highlights.length > 0 && (
+            <div style={{ marginTop: "1.75rem" }}>
+              <h2 style={{ fontSize: "1.1rem", borderBottom: "1px solid #eee", paddingBottom: "0.4rem" }}>
+                Highlights
+              </h2>
+              {highlights.map((h) => (
+                <div key={h.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: "1rem", marginTop: "0.85rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+                    <strong>{h.title}</strong>
+                    <span style={{ padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 600, background: "#f1f3f4", color: "#555" }}>
+                      {h.status === "IN_PROGRESS" ? "In progress" : h.status === "COMPLETED" ? "Completed" : "Idea"}
+                    </span>
+                  </div>
+                  {h.description && <p style={{ color: "#444", lineHeight: 1.5, margin: "0.6rem 0" }}>{h.description}</p>}
+                  {h.tags?.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", margin: "0.5rem 0" }}>
+                      {h.tags.map((t) => (
+                        <span key={t} style={{ padding: "0.2rem 0.55rem", borderRadius: 999, background: "#f1f3f4", fontSize: "0.8rem", color: "#444" }}>{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  {h.link && <a href={h.link} target="_blank" rel="noreferrer" style={{ color: "#1a73e8", textDecoration: "none", fontSize: "0.9rem" }}>Link ↗</a>}
+                </div>
+              ))}
+            </div>
           )}
         </>
       )}

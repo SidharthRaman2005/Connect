@@ -7,6 +7,9 @@ import Profile from "./pages/Profile";
 import StudentProfile from "./pages/StudentProfile";
 import Search from "./pages/Search";
 import Connections from "./pages/Connections";
+import MyHighlights from "./pages/MyHighlights";
+import Collabs from "./pages/Collabs";
+import AddCollab from "./pages/AddCollab";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -59,6 +62,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Connections />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/highlights"
+        element={
+          <ProtectedRoute>
+            <MyHighlights />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/collabs"
+        element={
+          <ProtectedRoute>
+            <Collabs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/collabs/add"
+        element={
+          <ProtectedRoute>
+            <AddCollab />
           </ProtectedRoute>
         }
       />

@@ -77,8 +77,11 @@ export default function Dashboard() {
 
       <nav style={styles.nav}>
         <Link to="/profile" style={styles.navLink}>My profile</Link>
+        <Link to="/highlights" style={styles.navLink}>My highlights</Link>
         <Link to="/search" style={styles.navLink}>Find people</Link>
         <Link to="/connections" style={styles.navLink}>Connections</Link>
+        <Link to="/collabs" style={styles.navLink}>Recent collabs</Link>
+        <Link to="/collabs/add" style={styles.navLink}>Add collab</Link>
       </nav>
 
       <h2 style={{ marginBottom: "0.25rem" }}>Suggested for you</h2>
@@ -115,7 +118,8 @@ const styles = {
   logout: { padding: "0.45rem 0.9rem", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" },
   nav: {
     display: "flex",
-    gap: "1rem",
+    flexWrap: "wrap",
+    gap: "0.75rem 1rem",
     padding: "0.75rem 0",
     borderTop: "1px solid #eee",
     borderBottom: "1px solid #eee",
