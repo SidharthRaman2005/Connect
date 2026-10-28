@@ -10,6 +10,12 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api
 // media paths (e.g. uploaded profile pictures served at /uploads/...).
 const API_ORIGIN = BASE_URL.replace(/\/api\/?$/, "");
 
+export function chatSocketUrl(ticket) {
+  const protocol = API_ORIGIN.startsWith("https:") ? "wss:" : "ws:";
+  const host = API_ORIGIN.replace(/^https?:/, "");
+  return `${protocol}${host}/ws/chat?ticket=${encodeURIComponent(ticket)}`;
+}
+
 /**
  * Resolve an image path from the backend into a URL usable in <img src>.
  * Absolute URLs (e.g. Google avatars) are returned unchanged; relative paths

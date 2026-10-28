@@ -28,6 +28,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Authenticated one-to-one chat over WebSocket. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- Security: stateless JWT-based authentication/authorization -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

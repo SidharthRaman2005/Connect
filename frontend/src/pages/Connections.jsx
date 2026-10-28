@@ -93,6 +93,7 @@ export default function Connections() {
         ) : (
           accepted.map((c) => (
             <Row key={c.id} other={c.other}>
+              <Link to={`/chat?with=${c.other.id}`} style={styles.primary}>Message</Link>
               <button style={styles.ghost} onClick={() => remove(c.id)}>Remove</button>
             </Row>
           ))

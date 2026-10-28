@@ -80,6 +80,7 @@ export default function Dashboard() {
         <Link to="/highlights" style={styles.navLink}>My highlights</Link>
         <Link to="/search" style={styles.navLink}>Find people</Link>
         <Link to="/connections" style={styles.navLink}>Connections</Link>
+        <Link to="/chat" style={styles.navLink}>Messages</Link>
         <Link to="/collabs" style={styles.navLink}>Recent collabs</Link>
         <Link to="/collabs/add" style={styles.navLink}>Add collab</Link>
       </nav>

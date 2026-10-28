@@ -10,6 +10,7 @@ import Connections from "./pages/Connections";
 import MyHighlights from "./pages/MyHighlights";
 import Collabs from "./pages/Collabs";
 import AddCollab from "./pages/AddCollab";
+import Chat from "./pages/Chat";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -62,6 +63,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Connections />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Chat />
           </ProtectedRoute>
         }
       />
