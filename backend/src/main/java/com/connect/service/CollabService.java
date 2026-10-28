@@ -17,6 +17,7 @@ import com.connect.entity.CollabPost;
 import com.connect.entity.CollabRequest;
 import com.connect.entity.CollabRequestStatus;
 import com.connect.entity.CollabStatus;
+import com.connect.entity.NotificationType;
 import com.connect.entity.Student;
 import com.connect.exception.BadRequestException;
 import com.connect.exception.ForbiddenException;
@@ -36,13 +37,16 @@ public class CollabService {
     private final CollabPostRepository postRepository;
     private final CollabRequestRepository requestRepository;
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
 
     public CollabService(CollabPostRepository postRepository,
                          CollabRequestRepository requestRepository,
-                         StudentRepository studentRepository) {
+                         StudentRepository studentRepository,
+                         NotificationService notificationService) {
         this.postRepository = postRepository;
         this.requestRepository = requestRepository;
         this.studentRepository = studentRepository;
+        this.notificationService = notificationService;
     }
 
     /** Recent open posts, each tagged with the viewer's relation to it. */
@@ -111,7 +115,12 @@ public class CollabService {
             throw new BadRequestException("You have already requested to join this collab.");
         }
         Student applicant = loadStudent(applicantId);
-        return CollabRequestDto.from(requestRepository.save(new CollabRequest(post, applicant)));
+        CollabRequest created = requestRepository.save(new CollabRequest(post, applicant));
+        if (notificationService != null) {
+            notificationService.create(post.getOwner(), applicant, NotificationType.COLLAB_APPLICATION,
+                    created.getId(), applicant.getName() + " requested to join " + post.getTitle() + ".");
+        }
+        return CollabRequestDto.from(created);
     }
 
     /** Owner accepts a join request, adding the applicant to the collab. */
@@ -127,7 +136,13 @@ public class CollabService {
         }
         request.setStatus(CollabRequestStatus.ACCEPTED);
         request.setSeen(false); // so the applicant is notified
-        return CollabRequestDto.from(requestRepository.save(request));
+        CollabRequest accepted = requestRepository.save(request);
+        if (notificationService != null) {
+            notificationService.create(request.getApplicant(), request.getPost().getOwner(),
+                    NotificationType.COLLAB_ACCEPTED, request.getId(),
+                    "You were accepted into " + request.getPost().getTitle() + ".");
+        }
+        return CollabRequestDto.from(accepted);
     }
 
     /** The caller's "you're in" notifications (accepted, not yet seen). */

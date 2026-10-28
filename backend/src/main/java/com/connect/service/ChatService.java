@@ -17,6 +17,7 @@ import com.connect.dto.StudentBrief;
 import com.connect.entity.ChatMessage;
 import com.connect.entity.Connection;
 import com.connect.entity.ConnectionStatus;
+import com.connect.entity.NotificationType;
 import com.connect.entity.Student;
 import com.connect.exception.BadRequestException;
 import com.connect.exception.ForbiddenException;
@@ -32,13 +33,16 @@ public class ChatService {
     private final ChatMessageRepository messageRepository;
     private final ConnectionRepository connectionRepository;
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
 
     public ChatService(ChatMessageRepository messageRepository,
                        ConnectionRepository connectionRepository,
-                       StudentRepository studentRepository) {
+                       StudentRepository studentRepository,
+                       NotificationService notificationService) {
         this.messageRepository = messageRepository;
         this.connectionRepository = connectionRepository;
         this.studentRepository = studentRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -53,7 +57,10 @@ public class ChatService {
         Student sender = load(senderId);
         Student recipient = load(recipientId);
         requireConnected(senderId, recipientId);
-        return ChatMessageDto.from(messageRepository.save(new ChatMessage(sender, recipient, content)));
+        ChatMessage saved = messageRepository.save(new ChatMessage(sender, recipient, content));
+        notificationService.create(recipient, sender, NotificationType.MESSAGE, saved.getId(),
+                sender.getName() + " sent you a message.");
+        return ChatMessageDto.from(saved);
     }
 
     @Transactional(readOnly = true)

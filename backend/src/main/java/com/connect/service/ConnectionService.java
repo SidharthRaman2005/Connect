@@ -11,6 +11,7 @@ import com.connect.dto.ConnectionDto;
 import com.connect.dto.RelationState;
 import com.connect.entity.Connection;
 import com.connect.entity.ConnectionStatus;
+import com.connect.entity.NotificationType;
 import com.connect.entity.Student;
 import com.connect.exception.BadRequestException;
 import com.connect.exception.ForbiddenException;
@@ -28,11 +29,14 @@ public class ConnectionService {
 
     private final ConnectionRepository connectionRepository;
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
 
     public ConnectionService(ConnectionRepository connectionRepository,
-                             StudentRepository studentRepository) {
+                             StudentRepository studentRepository,
+                             NotificationService notificationService) {
         this.connectionRepository = connectionRepository;
         this.studentRepository = studentRepository;
+        this.notificationService = notificationService;
     }
 
     /** Sends a connection request from the caller to another student. */
@@ -63,6 +67,10 @@ public class ConnectionService {
 
         Connection saved = connectionRepository.save(
                 new Connection(me, other, ConnectionStatus.PENDING));
+        if (notificationService != null) {
+            notificationService.create(other, me, NotificationType.CONNECTION_REQUEST, saved.getId(),
+                    me.getName() + " sent you a connection request.");
+        }
         return ConnectionDto.forViewer(saved, meId, RelationState.PENDING_OUTGOING);
     }
 
@@ -79,6 +87,13 @@ public class ConnectionService {
         }
         c.setStatus(accept ? ConnectionStatus.ACCEPTED : ConnectionStatus.REJECTED);
         Connection saved = connectionRepository.save(c);
+        if (notificationService != null) {
+            boolean accepted = accept;
+            notificationService.create(c.getRequester(), c.getAddressee(),
+                    accepted ? NotificationType.CONNECTION_ACCEPTED : NotificationType.CONNECTION_REJECTED,
+                    c.getId(), c.getAddressee().getName() + (accepted
+                            ? " accepted your connection request." : " declined your connection request."));
+        }
         return ConnectionDto.forViewer(saved, meId,
                 accept ? RelationState.CONNECTED : RelationState.NONE);
     }
@@ -154,7 +169,12 @@ public class ConnectionService {
             if (dummy.getId().equals(meId) || existing.containsKey(dummy.getId())) {
                 continue;
             }
-            connectionRepository.save(new Connection(dummy, me, ConnectionStatus.PENDING));
+            Connection createdConnection = connectionRepository.save(
+                    new Connection(dummy, me, ConnectionStatus.PENDING));
+            if (notificationService != null) {
+                notificationService.create(me, dummy, NotificationType.CONNECTION_REQUEST, createdConnection.getId(),
+                        dummy.getName() + " sent you a connection request.");
+            }
             created++;
         }
         return created;
