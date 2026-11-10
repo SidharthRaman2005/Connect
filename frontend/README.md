@@ -1,16 +1,25 @@
-# React + Vite
+# Connect frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React.js web client for the Connect campus networking platform.
 
-Currently, two official plugins are available:
+## Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `src/pages/` — route-level screens
+- `src/components/` — shared feature components
+- `src/auth/` — authentication session context
+- `src/theme/` — shared light/dark theme state
+- `src/lib/` — backend API client and media helpers
+- `public/` — static browser assets
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Copy `.env.example` to `.env`.
+2. Set `VITE_GOOGLE_CLIENT_ID` to the Google OAuth web client ID.
+3. Set `VITE_API_BASE_URL` to the backend API URL.
 
-## Expanding the ESLint configuration
+```powershell
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Google OAuth must allow the local frontend origin in Google Cloud Console. Module 2 provides the styled landing/sign-in screen and connects it to the existing backend authentication flow.

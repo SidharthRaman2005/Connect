@@ -5,6 +5,7 @@ import App from "./App";
 import "./index.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./auth/AuthContext";
+import { ThemeProvider } from "./theme/ThemeProvider";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -17,11 +18,13 @@ if (!clientId) {
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={clientId}>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </GoogleOAuthProvider>
   </StrictMode>
 );

@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 /**
  * Guards routes that require a signed-in student. While the session is being
@@ -7,10 +8,16 @@ import { useAuth } from "../auth/AuthContext";
  */
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
+  const { mode } = useTheme();
   const location = useLocation();
 
   if (loading) {
-    return <div style={{ padding: "2rem", textAlign: "center" }}>Loading…</div>;
+    return (
+      <main className="session-loading" data-theme={mode}>
+        <div className="session-loading__spinner" aria-hidden="true" />
+        <p>Restoring your Connect session…</p>
+      </main>
+    );
   }
 
   if (!isAuthenticated) {

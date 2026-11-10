@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 /**
  * Landing / sign-in page. The Google credential is sent to the backend, which
@@ -9,10 +10,12 @@ import { useAuth } from "../auth/AuthContext";
  * does not decide who may sign in.
  */
 export default function Login() {
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, isAuthenticated, loading, authError, clearAuthError } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const { mode, toggle } = useTheme();
 
   // Already signed in (or just signed in): go to the app.
   if (!loading && isAuthenticated) {
@@ -21,13 +24,15 @@ export default function Login() {
 
   const handleSuccess = async (credentialResponse) => {
     setError("");
+    clearAuthError();
     setSubmitting(true);
     try {
       const res = await login(credentialResponse.credential);
+      const destination = location.state?.from?.pathname;
       if (res.newAccount || !res.student.profileCompleted) {
         navigate("/onboarding", { replace: true });
       } else {
-        navigate("/dashboard", { replace: true });
+        navigate(destination || "/dashboard", { replace: true });
       }
     } catch (e) {
       setError(e.message || "Sign-in failed. Please try again.");
@@ -37,52 +42,39 @@ export default function Login() {
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Connect</h1>
-        <p style={styles.subtitle}>
-          A networking space for VIT-AP students. Sign in with your college
-          Google account to continue.
+    <main className="auth-page">
+      <button className="theme-toggle" onClick={toggle} type="button">
+        <span aria-hidden="true">{mode === "dark" ? "☼" : "◐"}</span>
+        {mode === "dark" ? "Light" : "Dark"}
+      </button>
+      <section className="auth-card">
+        <div className="auth-brand" aria-label="Connect">
+          <span className="auth-brand__mark" aria-hidden="true"><i /><i /><i /><i /></span>
+          <span>CONNECT</span>
+        </div>
+        <p className="auth-eyebrow">VIT-AP COMMUNITY</p>
+        <h1>Your campus.<br />Your people.</h1>
+        <p className="auth-subtitle">
+          Meet the people who will build what comes next. Made for the VIT-AP community.
         </p>
-
-        {submitting ? (
-          <p>Signing you in…</p>
-        ) : (
-          <div style={styles.googleWrap}>
+        <div className="auth-action">
+          {submitting ? (
+            <p className="auth-status">Signing you in…</p>
+          ) : (
             <GoogleLogin
               onSuccess={handleSuccess}
               onError={() => setError("Google sign-in was cancelled or failed.")}
+              text="continue_with"
+              theme={mode === "dark" ? "filled_black" : "outline"}
+              shape="pill"
+              width="100%"
             />
-          </div>
-        )}
-
-        {error && <p style={styles.error} role="alert">{error}</p>}
-
-        <p style={styles.hint}>Only @vitapstudent.ac.in accounts are allowed.</p>
-      </div>
-    </div>
+          )}
+        </div>
+        {(error || authError) && <p className="auth-error" role="alert">{error || authError}</p>}
+        <p className="auth-hint"><span aria-hidden="true">●</span> Only verified @vitapstudent.ac.in accounts can join</p>
+        <p className="auth-footer">Find your next teammate. <span>·</span> Connect, collaborate, create</p>
+      </section>
+    </main>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "1rem",
-  },
-  card: {
-    maxWidth: 380,
-    width: "100%",
-    padding: "2rem",
-    border: "1px solid #e2e2e2",
-    borderRadius: 12,
-    textAlign: "center",
-  },
-  title: { margin: "0 0 0.5rem", fontSize: "2rem" },
-  subtitle: { margin: "0 0 1.5rem", color: "#555", lineHeight: 1.5 },
-  googleWrap: { display: "flex", justifyContent: "center" },
-  error: { color: "#c0271c", marginTop: "1rem" },
-  hint: { marginTop: "1.5rem", fontSize: "0.85rem", color: "#888" },
-};
