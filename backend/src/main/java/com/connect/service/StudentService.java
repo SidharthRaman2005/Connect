@@ -34,8 +34,9 @@ public class StudentService {
 
     /**
      * Finds the student by Google id and authenticates them, or creates a new
-     * account on first login. Refreshes the display name / picture from Google
-     * and records the login time.
+     * account on first login. The Google picture is used as the initial
+     * fallback only; a picture uploaded through the profile page must survive
+     * later logins.
      */
     @Transactional
     public AuthResult createOrAuthenticate(VerifiedUser verifiedUser) {
@@ -53,9 +54,12 @@ public class StudentService {
             newAccount = true;
         }
 
-        // Keep the name/picture in sync with Google on every login.
+        // Keep the display name in sync with Google, but never overwrite a
+        // profile picture selected by the student.
         student.setName(verifiedUser.name());
-        student.setPictureUrl(verifiedUser.picture());
+        if (newAccount) {
+            student.setPictureUrl(verifiedUser.picture());
+        }
         student.setLastLoginAt(Instant.now());
 
         // Derive the batch from the email if not already set (also backfills

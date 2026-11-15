@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { resolveMediaUrl } from "../lib/api";
 import NotificationBell from "./NotificationBell";
 
@@ -14,6 +15,7 @@ const navigation = [
 
 export default function AppShell() {
   const { student, logout } = useAuth();
+  const { mode, toggle } = useTheme();
   const navigate = useNavigate();
   const initials = (student?.name || "S").charAt(0).toUpperCase();
 
@@ -52,6 +54,15 @@ export default function AppShell() {
         <header className="app-topbar">
           <div className="app-topbar__brand"><NavBrand /></div>
           <div className="app-topbar__actions">
+            <button
+              className="app-theme-toggle"
+              onClick={toggle}
+              type="button"
+              aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
+            >
+              <span aria-hidden="true">{mode === "dark" ? "☼" : "◐"}</span>
+              {mode === "dark" ? "Light" : "Dark"}
+            </button>
             <NotificationBell />
             <button type="button" className="app-topbar__avatar" onClick={() => navigate("/profile")}>
               <Avatar student={student} initials={initials} />

@@ -48,11 +48,12 @@ class StudentServiceTest {
     }
 
     @Test
-    void authenticatesExistingAndSyncsFromGoogle() {
+    void authenticatesExistingAndPreservesCustomPicture() {
         Student existing = new Student();
         existing.setGoogleId("google-sub-1");
         existing.setEmail("original@vitapstudent.ac.in");
         existing.setName("Old Name");
+        existing.setPictureUrl("/uploads/custom-picture.png");
         when(studentRepository.findByGoogleId("google-sub-1")).thenReturn(Optional.of(existing));
         when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -60,9 +61,10 @@ class StudentServiceTest {
                 verifiedUser("ignored@vitapstudent.ac.in", "Updated Name", "pic2"));
 
         assertThat(result.newAccount()).isFalse();
-        // Name/picture are refreshed from Google on each login...
+        // The display name is refreshed from Google...
         assertThat(result.student().getName()).isEqualTo("Updated Name");
-        assertThat(result.student().getPictureUrl()).isEqualTo("pic2");
+        // ...but a picture selected in the profile remains persistent.
+        assertThat(result.student().getPictureUrl()).isEqualTo("/uploads/custom-picture.png");
         // ...but the email is set only at creation and not overwritten.
         assertThat(result.student().getEmail()).isEqualTo("original@vitapstudent.ac.in");
     }
