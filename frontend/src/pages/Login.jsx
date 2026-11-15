@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -17,12 +17,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const { mode, toggle } = useTheme();
 
-  // Already signed in (or just signed in): go to the app.
-  if (!loading && isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const handleSuccess = async (credentialResponse) => {
+  const handleSuccess = useCallback(async (credentialResponse) => {
     setError("");
     clearAuthError();
     setSubmitting(true);
@@ -39,7 +34,16 @@ export default function Login() {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [clearAuthError, location.state, login, navigate]);
+
+  const handleError = useCallback(() => {
+    setError("Google sign-in was cancelled or failed.");
+  }, []);
+
+  // Already signed in (or just signed in): go to the app.
+  if (!loading && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <main className="auth-page">
@@ -61,13 +65,7 @@ export default function Login() {
           {submitting ? (
             <p className="auth-status">Signing you in…</p>
           ) : (
-            <GoogleLogin
-              onSuccess={handleSuccess}
-              onError={() => setError("Google sign-in was cancelled or failed.")}
-              text="continue_with"
-              theme={mode === "dark" ? "filled_black" : "outline"}
-              shape="pill"
-            />
+            <GoogleSignInButton onSuccess={handleSuccess} onError={handleError} />
           )}
         </div>
         {(error || authError) && <p className="auth-error" role="alert">{error || authError}</p>}
@@ -77,3 +75,15 @@ export default function Login() {
     </main>
   );
 }
+
+const GoogleSignInButton = memo(function GoogleSignInButton({ onSuccess, onError }) {
+  return (
+    <GoogleLogin
+      onSuccess={onSuccess}
+      onError={onError}
+      text="continue_with"
+      theme="outline"
+      shape="pill"
+    />
+  );
+});
