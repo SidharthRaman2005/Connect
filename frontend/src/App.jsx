@@ -6,6 +6,7 @@ import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
 import StudentProfile from "./pages/StudentProfile";
 import Search from "./pages/Search";
+import Discover from "./pages/Discover";
 import Connections from "./pages/Connections";
 import MyHighlights from "./pages/MyHighlights";
 import Collabs from "./pages/Collabs";
@@ -32,6 +33,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/students/:id" element={<StudentProfile />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/discover" element={<Discover />} />
         <Route path="/connections" element={<Connections />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/highlights" element={<MyHighlights />} />

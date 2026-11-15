@@ -5,7 +5,8 @@ import NotificationBell from "./NotificationBell";
 
 const navigation = [
   { to: "/dashboard", label: "Home", icon: "⌂", end: true },
-  { to: "/search", label: "Discover", icon: "⌕" },
+  { to: "/discover", label: "Discover", icon: "⌕" },
+  { to: "/connections", label: "Network", icon: "◌" },
   { to: "/collabs", label: "Collabs", icon: "✦" },
   { to: "/chat", label: "Inbox", icon: "↗" },
   { to: "/profile", label: "Profile", icon: "○" },
@@ -58,7 +59,7 @@ export default function AppShell() {
           </div>
         </header>
         <div className="app-mobile-nav">
-          {navigation.slice(0, 4).map((item) => (
+          {navigation.slice(0, 5).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => isActive ? "is-active" : ""}>
               <span aria-hidden="true">{item.icon}</span>{item.label}
             </NavLink>

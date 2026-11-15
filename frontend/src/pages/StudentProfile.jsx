@@ -55,107 +55,71 @@ export default function StudentProfile() {
     };
   }, [id]);
 
-  if (loading) {
-    return <div style={{ padding: "2rem", textAlign: "center" }}>Loading…</div>;
-  }
+  if (loading) return <div className="dashboard-loading"><span className="session-loading__spinner" /> Loading profile…</div>;
 
   const groups = { SKILL: [], INTEREST: [], CLUB: [] };
   for (const t of profile?.tags || []) (groups[t.category] ||= []).push(t);
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "2rem" }}>
-      <Link to="/dashboard" style={{ color: "#888", textDecoration: "none" }}>← Dashboard</Link>
+    <div className="student-profile-page">
+      <Link className="back-link" to="/discover">← Back to discover</Link>
 
       {error ? (
-        <p style={{ color: "#c0271c", marginTop: "1.5rem" }} role="alert">{error}</p>
+        <p className="page-error" role="alert">{error}</p>
       ) : (
         <>
-          <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <section className="student-profile-hero">
             {profile.pictureUrl ? (
               <img
                 src={resolveMediaUrl(profile.pictureUrl)}
                 alt={profile.name || "Student"}
-                style={{
-                  width: 220,
-                  height: 220,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                }}
+                className="student-profile__photo"
                 referrerPolicy="no-referrer"
               />
             ) : (
               <div
-                style={{
-                  width: 220,
-                  height: 220,
-                  borderRadius: "50%",
-                  margin: "0 auto",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "5rem",
-                  fontWeight: 700,
-                  color: "#fff",
-                  textTransform: "uppercase",
-                  background: "linear-gradient(135deg, #1a73e8, #6aa8ff)",
-                }}
+                className="student-profile__photo student-profile__photo--fallback"
               >
                 {(profile.name || "?").charAt(0)}
               </div>
             )}
-            <h1 style={{ margin: "1rem 0 0" }}>{profile.name || "Student"}</h1>
-            <p style={{ margin: "0.25rem 0 0", color: "#555" }}>
+            <h1>{profile.name || "Student"}</h1>
+            <p className="student-profile__meta">
               {[profile.branch, profile.batch && `Batch ${profile.batch}`]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
 
-            <div style={{ marginTop: "1rem" }}>
+            <div className="student-profile__actions">
               <button
                 type="button"
                 onClick={connect}
                 disabled={connecting}
-                style={{
-                  padding: "0.6rem 1.6rem",
-                  border: "none",
-                  borderRadius: 10,
-                  background: "#1a73e8",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "1rem",
-                }}
+                className="accent-button"
               >
                 {connecting ? "Sending…" : "Connect"}
               </button>
               {connectMsg && (
-                <div style={{ marginTop: "0.5rem", color: "#555" }}>{connectMsg}</div>
+                <div className="action-message">{connectMsg}</div>
               )}
             </div>
-          </div>
+            </section>
 
           {profile.bio && (
-            <p style={{ marginTop: "1.5rem", lineHeight: 1.6, textAlign: "center" }}>{profile.bio}</p>
+            <p className="student-profile__bio">{profile.bio}</p>
           )}
 
           {["SKILL", "INTEREST", "CLUB"].map((category) =>
             groups[category]?.length ? (
-              <div key={category} style={{ marginTop: "1.25rem" }}>
-                <div style={{ fontSize: "0.8rem", textTransform: "uppercase", color: "#888" }}>
+              <div key={category} className="profile-detail-section">
+                <div className="profile-detail-section__label">
                   {CATEGORY_LABELS[category]}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.4rem" }}>
+                <div className="profile-tags">
                   {groups[category].map((t) => (
                     <span
                       key={t.id}
-                      style={{
-                        padding: "0.3rem 0.7rem",
-                        borderRadius: 999,
-                        border: "1px solid #ddd",
-                        background: "#f6f8fa",
-                        fontSize: "0.9rem",
-                      }}
+                      className="profile-tag"
                     >
                       {t.name}
                     </span>
@@ -166,27 +130,27 @@ export default function StudentProfile() {
           )}
 
           {highlights.length > 0 && (
-            <div style={{ marginTop: "1.75rem" }}>
-              <h2 style={{ fontSize: "1.1rem", borderBottom: "1px solid #eee", paddingBottom: "0.4rem" }}>
+            <div className="profile-highlights">
+              <h2>
                 Highlights
               </h2>
               {highlights.map((h) => (
-                <div key={h.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: "1rem", marginTop: "0.85rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+                <div key={h.id} className="highlight-card">
+                  <div className="highlight-card__heading">
                     <strong>{h.title}</strong>
-                    <span style={{ padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 600, background: "#f1f3f4", color: "#555" }}>
+                    <span className="highlight-card__status">
                       {h.status === "IN_PROGRESS" ? "In progress" : h.status === "COMPLETED" ? "Completed" : "Idea"}
                     </span>
                   </div>
-                  {h.description && <p style={{ color: "#444", lineHeight: 1.5, margin: "0.6rem 0" }}>{h.description}</p>}
+                  {h.description && <p>{h.description}</p>}
                   {h.tags?.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", margin: "0.5rem 0" }}>
+                    <div className="profile-tags">
                       {h.tags.map((t) => (
-                        <span key={t} style={{ padding: "0.2rem 0.55rem", borderRadius: 999, background: "#f1f3f4", fontSize: "0.8rem", color: "#444" }}>{t}</span>
+                        <span key={t} className="profile-tag">{t}</span>
                       ))}
                     </div>
                   )}
-                  {h.link && <a href={h.link} target="_blank" rel="noreferrer" style={{ color: "#1a73e8", textDecoration: "none", fontSize: "0.9rem" }}>Link ↗</a>}
+                  {h.link && <a href={h.link} target="_blank" rel="noreferrer" className="highlight-card__link">Link ↗</a>}
                 </div>
               ))}
             </div>
