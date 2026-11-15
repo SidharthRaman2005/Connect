@@ -67,7 +67,6 @@ export default function Login() {
               text="continue_with"
               theme={mode === "dark" ? "filled_black" : "outline"}
               shape="pill"
-              width="100%"
             />
           )}
         </div>
