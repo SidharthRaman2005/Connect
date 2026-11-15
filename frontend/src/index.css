@@ -30,3 +30,4 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--bg); color: var(--text); }
 button { font: inherit; cursor: pointer; }
+a { color: inherit; }

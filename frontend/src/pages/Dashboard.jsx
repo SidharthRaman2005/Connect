@@ -1,132 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
-import StudentCard from "../components/StudentCard";
-import NotificationBell from "../components/NotificationBell";
 
-/**
- * Home after sign-in. Shows the student's own header, navigation, and a
- * discovery feed of other students ranked by shared tags (M3.1) — so people
- * show up without searching. Connecting is done inline on each card (M3.2).
- */
 export default function Dashboard() {
-  const { student, logout } = useAuth();
+  const { student } = useAuth();
   const navigate = useNavigate();
-
-  const [feed, setFeed] = useState([]);
+  const [people, setPeople] = useState([]);
+  const [collabs, setCollabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
     let active = true;
-    api
-      .get("/discover")
-      .then((list) => active && setFeed(list || []))
-      .catch((e) => active && setError(e.message || "Failed to load suggestions."))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
+    Promise.all([api.get("/discover"), api.get("/collabs")])
+      .then(([discover, opportunities]) => {
+        if (!active) return;
+        setPeople((discover || []).slice(0, 3));
+        setCollabs((opportunities || []).slice(0, 3));
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message || "Could not load your home feed.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, []);
 
-  const connect = useCallback(async (id) => {
-    setBusyId(id);
-    try {
-      await api.post("/connections", { addresseeId: id });
-      setFeed((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, relation: "PENDING_OUTGOING" } : c))
-      );
-    } catch (e) {
-      setError(e.message || "Could not send request.");
-    } finally {
-      setBusyId(null);
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/", { replace: true });
-  };
+  const firstName = student?.name?.split(" ")[0] || "there";
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div style={styles.ident}>
-          {student.pictureUrl && (
-            <img
-              src={resolveMediaUrl(student.pictureUrl)}
-              alt=""
-              width={44}
-              height={44}
-              style={{ borderRadius: "50%", objectFit: "cover" }}
-              referrerPolicy="no-referrer"
-            />
-          )}
-          <div>
-            <strong>{student.name || "student"}</strong>
-            <div style={{ color: "#777", fontSize: "0.85rem" }}>{student.email}</div>
-          </div>
+    <div className="dashboard-page">
+      <div className="dashboard-heading">
+        <div>
+          <p className="dashboard-eyebrow">YOUR CONNECT SPACE</p>
+          <h1>Hey, {firstName} <span aria-hidden="true">👋</span></h1>
+          <p className="dashboard-subtitle">A good project starts with the right people.</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <NotificationBell />
-          <button onClick={handleLogout} style={styles.logout}>Log out</button>
+        <span className="dashboard-notifications">Updates are in the bell <span aria-hidden="true">⌁</span></span>
+      </div>
+
+      <section className="dashboard-hero">
+        <div>
+          <span className="dashboard-hero__label">START SOMETHING</span>
+          <h2>Make something<br />together.</h2>
+          <p>Find teammates, share what you are building, and make campus connections.</p>
         </div>
-      </header>
+        <div className="dashboard-hero__actions">
+          <button type="button" onClick={() => navigate("/search")}>Find teammates <span>→</span></button>
+          <button type="button" className="dashboard-hero__secondary" onClick={() => navigate("/collabs")}>Explore opportunities <span>→</span></button>
+        </div>
+      </section>
 
-      <nav style={styles.nav}>
-        <Link to="/profile" style={styles.navLink}>My profile</Link>
-        <Link to="/highlights" style={styles.navLink}>My highlights</Link>
-        <Link to="/search" style={styles.navLink}>Find people</Link>
-        <Link to="/connections" style={styles.navLink}>Connections</Link>
-        <Link to="/chat" style={styles.navLink}>Messages</Link>
-        <Link to="/collabs" style={styles.navLink}>Recent collabs</Link>
-        <Link to="/collabs/add" style={styles.navLink}>Add collab</Link>
-      </nav>
-
-      <h2 style={{ marginBottom: "0.25rem" }}>Suggested for you</h2>
-      <p style={{ marginTop: 0, color: "#777" }}>Students who share your skills, interests, and clubs.</p>
-
-      {error && <p style={styles.error} role="alert">{error}</p>}
+      {error && <p className="dashboard-error" role="alert">{error}</p>}
       {loading ? (
-        <p style={{ color: "#777" }}>Loading…</p>
-      ) : feed.length === 0 ? (
-        <p style={{ color: "#777" }}>
-          No suggestions yet. Add tags on <Link to="/profile">your profile</Link> or{" "}
-          <Link to="/search">search for people</Link>.
-        </p>
+        <div className="dashboard-loading"><div className="session-loading__spinner" /><span>Finding your people…</span></div>
       ) : (
-        <div style={styles.grid}>
-          {feed.map((card) => (
-            <StudentCard key={card.id} card={card} onConnect={connect} busy={busyId === card.id} />
-          ))}
+        <div className="dashboard-sections">
+          <DashboardSection title="People to meet" action="See all" to="/search">
+            {people.length ? people.map((person) => <PersonRow key={person.id} person={person} onClick={() => navigate(`/students/${person.id}`)} />) : <EmptyState text="Add interests to your profile to get better suggestions." to="/profile" action="Update profile" />}
+          </DashboardSection>
+          <DashboardSection title="Open collaborations" action="Explore" to="/collabs">
+            {collabs.length ? collabs.map((collab) => <CollabRow key={collab.id} collab={collab} onClick={() => navigate("/collabs")} />) : <EmptyState text="No open opportunities yet. Post the first one." to="/collabs/add" action="Create opportunity" />}
+          </DashboardSection>
         </div>
       )}
     </div>
   );
 }
 
-const styles = {
-  page: { maxWidth: 760, margin: "0 auto", padding: "2rem" },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "1.25rem",
-  },
-  ident: { display: "flex", alignItems: "center", gap: "0.75rem" },
-  logout: { padding: "0.45rem 0.9rem", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" },
-  nav: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "0.75rem 1rem",
-    padding: "0.75rem 0",
-    borderTop: "1px solid #eee",
-    borderBottom: "1px solid #eee",
-    marginBottom: "1.5rem",
-  },
-  navLink: { color: "#1a73e8", textDecoration: "none", fontWeight: 600 },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" },
-  error: { color: "#c0271c" },
-};
+function DashboardSection({ title, action, to, children }) {
+  return (
+    <section className="dashboard-section">
+      <div className="dashboard-section__heading"><h2>{title}</h2><Link to={to}>{action} <span>→</span></Link></div>
+      <div className="dashboard-list">{children}</div>
+    </section>
+  );
+}
+
+function PersonRow({ person, onClick }) {
+  const meta = [person.branch || "VIT-AP", person.batch && `Batch ${person.batch}`].filter(Boolean).join(" · ");
+  return (
+    <button type="button" className="dashboard-row" onClick={onClick}>
+      {person.pictureUrl ? <img src={resolveMediaUrl(person.pictureUrl)} alt="" referrerPolicy="no-referrer" /> : <span className="dashboard-row__avatar">{(person.name || "?").charAt(0)}</span>}
+      <span className="dashboard-row__content"><strong>{person.name}</strong><small>{meta}</small></span>
+      {person.sharedTagCount > 0 && <span className="dashboard-row__match">{person.sharedTagCount} shared</span>}
+      <span className="dashboard-row__arrow" aria-hidden="true">→</span>
+    </button>
+  );
+}
+
+function CollabRow({ collab, onClick }) {
+  return (
+    <button type="button" className="dashboard-row dashboard-row--collab" onClick={onClick}>
+      <span className="dashboard-collab-icon" aria-hidden="true">✦</span>
+      <span className="dashboard-row__content"><strong>{collab.title}</strong><small>{collab.type} · by {collab.owner?.name || "Student"}</small></span>
+      <span className="dashboard-row__arrow" aria-hidden="true">→</span>
+    </button>
+  );
+}
+
+function EmptyState({ text, action, to }) {
+  return <div className="dashboard-empty"><p>{text}</p><Link to={to}>{action} →</Link></div>;
+}

@@ -12,6 +12,7 @@ import Collabs from "./pages/Collabs";
 import AddCollab from "./pages/AddCollab";
 import Chat from "./pages/Chat";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AppShell from "./components/AppShell";
 
 function App() {
   return (
@@ -26,78 +27,17 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/students/:id"
-        element={
-          <ProtectedRoute>
-            <StudentProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/search"
-        element={
-          <ProtectedRoute>
-            <Search />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/connections"
-        element={
-          <ProtectedRoute>
-            <Connections />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <Chat />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/highlights"
-        element={
-          <ProtectedRoute>
-            <MyHighlights />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/collabs"
-        element={
-          <ProtectedRoute>
-            <Collabs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/collabs/add"
-        element={
-          <ProtectedRoute>
-            <AddCollab />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/students/:id" element={<StudentProfile />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/connections" element={<Connections />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/highlights" element={<MyHighlights />} />
+        <Route path="/collabs" element={<Collabs />} />
+        <Route path="/collabs/add" element={<AddCollab />} />
+      </Route>
     </Routes>
   );
 }
