@@ -17,13 +17,13 @@
 
 :root[data-theme="light"] {
   color: #172018;
-  background: #f4f7f0;
-  --bg: #f4f7f0;
-  --surface: #fff;
-  --raised: #eef3e9;
+  background: #f3f4ec;
+  --bg: #f3f4ec;
+  --surface: #fffdf6;
+  --raised: #eef0e5;
   --text: #172018;
   --muted: #6b776d;
-  --border: #dce5da;
+  --border: #d9dfd2;
   --danger: #c0271c;
 }
 

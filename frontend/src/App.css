@@ -284,6 +284,12 @@
 .owned-highlight > p { color: var(--muted); font-size: 13px; line-height: 1.55; }
 .owned-highlight__actions { display: flex; gap: 7px; margin-top: 17px; }
 .small-button--danger { border-color: rgb(255 120 128 / 35%); color: var(--danger); background: transparent; }
+.highlights-page { max-width: 920px; margin: 0 auto; }
+.highlights-page .page-heading { align-items: center; flex-direction: column; text-align: center; }
+.highlights-page .page-heading__link { margin-top: -8px; }
+.highlights-page .feature-form, .highlights-page .highlights-list { width: min(100%, 760px); margin-right: auto; margin-left: auto; }
+.highlights-page .feature-form { text-align: left; }
+.highlights-page .section-title-row { justify-content: center; }
 .inbox-page { width: 100%; }
 .inbox-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
 .inbox-header h1 { margin: 0 0 8px; font-size: clamp(36px, 5vw, 52px); line-height: .95; letter-spacing: -2px; }
