@@ -344,6 +344,13 @@
 .profile-page [style*="color: #888"], .profile-page [style*="color: #999"] { color: var(--muted) !important; }
 .profile-page [style*="color: #c0271c"] { color: var(--danger) !important; }
 .profile-page [style*="color: #188038"] { color: #9de875 !important; }
+.profile-page .profile-dashboard-link { display: inline-flex; align-items: center; border: 1px solid var(--accent); border-radius: 10px; padding: 9px 13px; color: #000 !important; background: var(--accent); font-size: 12px; font-weight: 900; text-decoration: none; }
+.profile-photo-button { border-color: var(--accent) !important; color: var(--accent-text) !important; background: var(--accent) !important; }
+.profile-remove-button { border: 1px solid rgb(255 120 128 / 35%) !important; border-radius: 9px; padding: 8px 11px !important; color: var(--danger) !important; background: transparent !important; }
+.profile-tag-chip { border: 1px solid var(--accent) !important; color: var(--accent-text) !important; background: var(--accent) !important; }
+.profile-tag-chip__remove { color: var(--accent-text) !important; background: rgb(23 32 14 / 20%) !important; }
+.profile-save-button { border: 1px solid var(--accent) !important; color: var(--accent-text) !important; background: var(--accent) !important; }
+.profile-done-button { border-color: var(--border) !important; color: var(--text) !important; background: var(--raised) !important; }
 
 @media (max-width: 640px) {
   .auth-page { padding: 72px 10px 10px; }

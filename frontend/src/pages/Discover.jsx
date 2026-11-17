@@ -91,14 +91,11 @@ export default function Discover() {
 function StudentTile({ student, busy, onConnect, onOpen }) {
   const tags = student.tags || [];
   const relation = student.relation;
+  const pictureUrl = student.pictureUrl || `https://i.pravatar.cc/600?img=${((Number(student.id) || 1) % 70) + 1}`;
   return (
     <article className="discover-card">
       <button type="button" className="discover-card__photo" onClick={onOpen}>
-        {student.pictureUrl ? (
-          <img src={resolveMediaUrl(student.pictureUrl)} alt={student.name || "Student"} referrerPolicy="no-referrer" />
-        ) : (
-          <span>{(student.name || "?").charAt(0)}</span>
-        )}
+        <img src={student.pictureUrl ? resolveMediaUrl(pictureUrl) : pictureUrl} alt={student.name || "Student"} referrerPolicy="no-referrer" />
         {student.sharedTagCount > 0 && <b>{student.sharedTagCount} shared</b>}
       </button>
       <div className="discover-card__body">

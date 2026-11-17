@@ -104,6 +104,7 @@ export default function Profile() {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
     if (!file) return;
+    if (!window.confirm("Change your profile photo?")) return;
     setPhotoError("");
     setUploadingPhoto(true);
     try {
@@ -120,6 +121,7 @@ export default function Profile() {
   };
 
   const handlePhotoRemove = async () => {
+    if (!window.confirm("Remove your profile photo?")) return;
     setPhotoError("");
     setUploadingPhoto(true);
     try {
@@ -141,6 +143,7 @@ export default function Profile() {
       setSaveError("Branch is required.");
       return;
     }
+    if (!window.confirm("Save these profile changes?")) return;
     setSaving(true);
     try {
       await api.put("/profile/me", { branch: branch.trim(), bio, visibility });
@@ -161,7 +164,7 @@ export default function Profile() {
     return (
       <div className="profile-page">
         <p className="page-error" role="alert">{loadError}</p>
-        <Link to="/dashboard">← Back to dashboard</Link>
+        <Link className="profile-dashboard-link" to="/dashboard">← Dashboard</Link>
       </div>
     );
   }
@@ -170,7 +173,7 @@ export default function Profile() {
     <div className="profile-page">
       <div style={styles.headerRow}>
         <h1 style={{ margin: 0 }}>Your profile</h1>
-        <Link to="/dashboard" style={styles.muted}>← Dashboard</Link>
+        <Link className="profile-dashboard-link" to="/dashboard">← Dashboard</Link>
       </div>
 
       {/* --- Profile photo (upload from device) --- */}
@@ -188,7 +191,7 @@ export default function Profile() {
           <div style={{ ...styles.avatar, ...styles.avatarEmpty }}>No photo</div>
         )}
         <div style={{ flex: 1 }}>
-          <label style={styles.uploadBtn}>
+          <label className="profile-photo-button" style={styles.uploadBtn}>
             {uploadingPhoto ? "Uploading…" : pictureUrl ? "Change photo" : "Upload photo"}
             <input
               type="file"
@@ -203,6 +206,7 @@ export default function Profile() {
               type="button"
               onClick={handlePhotoRemove}
               disabled={uploadingPhoto}
+              className="profile-remove-button"
               style={styles.linkBtn}
             >
               Remove photo
@@ -259,12 +263,13 @@ export default function Profile() {
               {selected.length > 0 ? (
                 <div style={styles.chips}>
                   {selected.map((tag) => (
-                    <span key={tag.id} style={styles.chipOn}>
+                    <span key={tag.id} className="profile-tag-chip" style={styles.chipOn}>
                       {tag.name}
                       <button
                         type="button"
                         onClick={() => removeTag(tag.id)}
                         aria-label={`Remove ${tag.name}`}
+                        className="profile-tag-chip__remove"
                         style={styles.chipRemove}
                       >
                         ×
@@ -310,10 +315,10 @@ export default function Profile() {
         {saved && <p style={styles.success}>Saved.</p>}
 
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-          <button type="submit" disabled={saving} style={styles.primary}>
+          <button className="profile-save-button" type="submit" disabled={saving} style={styles.primary}>
             {saving ? "Saving…" : "Save profile"}
           </button>
-          <button type="button" onClick={() => navigate("/dashboard")} style={styles.secondary}>
+          <button className="profile-done-button" type="button" onClick={() => navigate("/dashboard")} style={styles.secondary}>
             Done
           </button>
         </div>
