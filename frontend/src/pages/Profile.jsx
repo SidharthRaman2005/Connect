@@ -155,19 +155,19 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <div style={{ padding: "2rem", textAlign: "center" }}>Loading…</div>;
+    return <div className="dashboard-loading"><span className="session-loading__spinner" /> Loading profile…</div>;
   }
   if (loadError) {
     return (
-      <div style={styles.page}>
-        <p style={styles.error} role="alert">{loadError}</p>
+      <div className="profile-page">
+        <p className="page-error" role="alert">{loadError}</p>
         <Link to="/dashboard">← Back to dashboard</Link>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="profile-page">
       <div style={styles.headerRow}>
         <h1 style={{ margin: 0 }}>Your profile</h1>
         <Link to="/dashboard" style={styles.muted}>← Dashboard</Link>

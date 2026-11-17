@@ -156,52 +156,52 @@ export default function Chat() {
   const visibleMessages = historyForId === selectedId ? messages : [];
 
   return (
-    <main style={styles.page}>
-      <header style={styles.header}>
-        <div><h1 style={{ margin: 0 }}>Messages</h1><span style={styles.status}>{socketState === "connected" ? "Live" : "Connecting…"}</span></div>
-        <Link to="/dashboard" style={styles.link}>← Dashboard</Link>
+    <main className="inbox-page">
+      <header className="inbox-header">
+        <div><h1>Messages</h1><span className="inbox-status">{socketState === "connected" ? "Live" : "Connecting…"}</span></div>
+        <Link className="page-heading__link" to="/dashboard">← Dashboard</Link>
       </header>
-      {error && <p role="alert" style={styles.error}>{error}</p>}
-      <div style={styles.layout}>
-        <aside style={styles.sidebar} aria-label="Conversations">
-          <h2 style={styles.sideTitle}>Connections</h2>
-          {loadingConversations ? <p style={styles.muted}>Loading…</p> : conversations.length === 0 ? (
-            <p style={styles.muted}>Connect with a student to start chatting.</p>
+      {error && <p role="alert" className="page-error">{error}</p>}
+      <div className="inbox-layout">
+        <aside className="inbox-sidebar" aria-label="Conversations">
+          <h2>Connections</h2>
+          {loadingConversations ? <p className="inbox-muted">Loading…</p> : conversations.length === 0 ? (
+            <p className="inbox-muted">Connect with a student to start chatting.</p>
           ) : conversations.map((conversation) => (
             <button key={conversation.other.id} type="button" onClick={() => setSelectedId(conversation.other.id)}
-              style={{ ...styles.conversation, ...(selectedId === conversation.other.id ? styles.selectedConversation : {}) }}>
+              className={`inbox-conversation${selectedId === conversation.other.id ? " is-selected" : ""}`}>
               <Avatar student={conversation.other} />
-              <span style={styles.conversationText}>
+              <span className="inbox-conversation__text">
                 <strong>{conversation.other.name || "Student"}</strong>
-                <span style={styles.preview}>{conversation.lastMessage || conversation.other.branch || "Start a conversation"}</span>
+                <span className="inbox-preview">{conversation.lastMessage || conversation.other.branch || "Start a conversation"}</span>
               </span>
-              {conversation.unreadCount > 0 && <span style={styles.unread}>{conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}</span>}
+              {conversation.unreadCount > 0 && <span className="inbox-unread">{conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}</span>}
             </button>
           ))}
         </aside>
 
-        <section style={styles.chat} aria-label="Chat messages">
+        <section className="inbox-chat" aria-label="Chat messages">
           {selected ? <>
-            <div style={styles.chatHeader}>
+            <div className="inbox-chat__header">
               <Avatar student={selected.other} size={42} />
-              <div><strong>{selected.other.name || "Student"}</strong><div style={styles.muted}>{[selected.other.branch, selected.other.batch && `Batch ${selected.other.batch}`].filter(Boolean).join(" · ")}</div></div>
+              <div><strong>{selected.other.name || "Student"}</strong><div className="inbox-muted">{[selected.other.branch, selected.other.batch && `Batch ${selected.other.batch}`].filter(Boolean).join(" · ")}</div></div>
             </div>
-            <div style={styles.messageList}>
-              {totalPages > page + 1 && <button type="button" onClick={() => loadHistory(selectedId, page + 1, true)} disabled={loadingMessages} style={styles.older}>Load older messages</button>}
-              {loadingMessages && visibleMessages.length === 0 ? <p style={styles.muted}>Loading messages…</p> : visibleMessages.length === 0 ? <p style={styles.empty}>No messages yet. Say hello.</p> : visibleMessages.map((message) => (
-                <div key={message.id} style={{ ...styles.messageRow, justifyContent: message.senderId === selectedId ? "flex-start" : "flex-end" }}>
-                  <div style={{ ...styles.bubble, ...(message.senderId === selectedId ? styles.theirBubble : styles.myBubble) }}>
-                    <div>{message.content}</div><time style={styles.time}>{new Date(message.sentAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
+            <div className="inbox-messages">
+              {totalPages > page + 1 && <button type="button" onClick={() => loadHistory(selectedId, page + 1, true)} disabled={loadingMessages} className="inbox-older">Load older messages</button>}
+              {loadingMessages && visibleMessages.length === 0 ? <p className="inbox-muted">Loading messages…</p> : visibleMessages.length === 0 ? <p className="inbox-empty">No messages yet. Say hello.</p> : visibleMessages.map((message) => (
+                <div key={message.id} className={`inbox-message-row ${message.senderId === selectedId ? "is-their-message" : "is-my-message"}`}>
+                  <div className={`inbox-bubble ${message.senderId === selectedId ? "is-their-bubble" : "is-my-bubble"}`}>
+                    <div>{message.content}</div><time>{new Date(message.sentAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
                   </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <form onSubmit={sendMessage} style={styles.composer}>
+            <form onSubmit={sendMessage} className="inbox-composer">
               <input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={2000} placeholder="Write a message…" aria-label="Message" />
-              <button type="submit" disabled={!draft.trim() || socketState !== "connected"} style={styles.send}>Send</button>
+              <button type="submit" disabled={!draft.trim() || socketState !== "connected"}>Send</button>
             </form>
-          </> : <div style={styles.emptyState}>{loadingConversations ? "Loading conversations…" : "Choose a connection to start chatting."}</div>}
+          </> : <div className="inbox-empty-state">{loadingConversations ? "Loading conversations…" : "Choose a connection to start chatting."}</div>}
         </section>
       </div>
     </main>
@@ -209,21 +209,7 @@ export default function Chat() {
 }
 
 function Avatar({ student, size = 44 }) {
-  return student.pictureUrl ? <img src={resolveMediaUrl(student.pictureUrl)} alt="" width={size} height={size} style={{ ...styles.avatar, width: size, height: size }} referrerPolicy="no-referrer" />
-    : <span style={{ ...styles.avatarEmpty, width: size, height: size, fontSize: size * 0.4 }}>{(student.name || "?").charAt(0)}</span>;
+  return student.pictureUrl ? <img className="inbox-avatar" src={resolveMediaUrl(student.pictureUrl)} alt="" width={size} height={size} style={{ width: size, height: size }} referrerPolicy="no-referrer" />
+    : <span className="inbox-avatar inbox-avatar--empty" style={{ width: size, height: size, fontSize: size * 0.4 }}>{(student.name || "?").charAt(0)}</span>;
 }
 
-const styles = {
-  page: { maxWidth: 1000, margin: "0 auto", padding: "1.5rem" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" },
-  status: { color: "#777", fontSize: ".8rem" }, link: { color: "#1a73e8", textDecoration: "none" },
-  error: { color: "#c0271c" }, layout: { display: "grid", gridTemplateColumns: "minmax(220px, 300px) 1fr", minHeight: 560, border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden", background: "#fff" },
-  sidebar: { borderRight: "1px solid #e5e7eb", padding: ".8rem", overflowY: "auto" }, sideTitle: { fontSize: ".95rem", margin: ".2rem .4rem .7rem" },
-  conversation: { width: "100%", display: "flex", alignItems: "center", gap: ".65rem", textAlign: "left", background: "transparent", border: 0, borderRadius: 10, padding: ".6rem .4rem", cursor: "pointer" }, selectedConversation: { background: "#eef4ff" },
-  conversationText: { minWidth: 0, flex: 1, display: "flex", flexDirection: "column", color: "#222" }, preview: { overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", color: "#777", fontSize: ".8rem", marginTop: ".15rem" },
-  unread: { minWidth: 20, borderRadius: 20, padding: ".1rem .35rem", color: "white", background: "#1a73e8", textAlign: "center", fontSize: ".75rem" },
-  avatar: { borderRadius: "50%", objectFit: "cover", flexShrink: 0 }, avatarEmpty: { borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#e8eefc", color: "#1a73e8", fontWeight: 700, textTransform: "uppercase", flexShrink: 0 },
-  chat: { minWidth: 0, display: "flex", flexDirection: "column" }, chatHeader: { display: "flex", alignItems: "center", gap: ".65rem", padding: ".7rem 1rem", borderBottom: "1px solid #eee" }, muted: { color: "#777", fontSize: ".82rem" },
-  messageList: { flex: 1, maxHeight: 470, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: ".45rem" }, messageRow: { display: "flex" }, bubble: { maxWidth: "78%", padding: ".55rem .75rem", borderRadius: 14, overflowWrap: "anywhere" }, theirBubble: { background: "#f1f3f4", color: "#222", borderBottomLeftRadius: 4 }, myBubble: { background: "#1a73e8", color: "white", borderBottomRightRadius: 4 }, time: { display: "block", textAlign: "right", opacity: .7, fontSize: ".68rem", marginTop: ".25rem" },
-  composer: { display: "flex", gap: ".5rem", padding: ".75rem", borderTop: "1px solid #eee" }, send: { border: 0, borderRadius: 8, padding: "0 .9rem", color: "white", background: "#1a73e8", cursor: "pointer" }, older: { alignSelf: "center", border: 0, background: "transparent", color: "#1a73e8", cursor: "pointer" }, empty: { color: "#888", textAlign: "center", margin: "auto" }, emptyState: { margin: "auto", padding: "2rem", color: "#888" },
-};
