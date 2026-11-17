@@ -48,7 +48,6 @@ export default function Dashboard() {
           <p>Find teammates, share what you are building, and make campus connections.</p>
         </div>
         <div className="dashboard-hero__actions">
-          <button type="button" onClick={() => navigate("/search")}>Find teammates <span>→</span></button>
           <button type="button" className="dashboard-hero__secondary" onClick={() => navigate("/collabs")}>Explore opportunities <span>→</span></button>
         </div>
       </section>
