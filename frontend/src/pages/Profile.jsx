@@ -173,7 +173,10 @@ export default function Profile() {
     <div className="profile-page">
       <div style={styles.headerRow}>
         <h1 style={{ margin: 0 }}>Your profile</h1>
-        <Link className="profile-dashboard-link" to="/dashboard">← Dashboard</Link>
+        <div className="profile-header-actions">
+          <Link className="profile-dashboard-link" to="/dashboard">← Dashboard</Link>
+          <Link className="profile-blog-link" to="/blogs">Write a blog <span>→</span></Link>
+        </div>
       </div>
 
       {/* --- Profile photo (upload from device) --- */}

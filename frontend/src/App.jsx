@@ -8,7 +8,7 @@ import StudentProfile from "./pages/StudentProfile";
 import Search from "./pages/Search";
 import Discover from "./pages/Discover";
 import Connections from "./pages/Connections";
-import MyHighlights from "./pages/MyHighlights";
+import Blog from "./pages/Blog";
 import Collabs from "./pages/Collabs";
 import AddCollab from "./pages/AddCollab";
 import Chat from "./pages/Chat";
@@ -36,7 +36,7 @@ function App() {
         <Route path="/discover" element={<Discover />} />
         <Route path="/connections" element={<Connections />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/highlights" element={<MyHighlights />} />
+        <Route path="/blogs" element={<Blog />} />
         <Route path="/collabs" element={<Collabs />} />
         <Route path="/collabs/add" element={<AddCollab />} />
       </Route>

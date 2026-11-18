@@ -78,44 +78,44 @@ export default function NotificationBell() {
   };
 
   return (
-    <div ref={ref} style={styles.wrap}>
-      <button type="button" onClick={toggle} aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`} style={styles.bellBtn}>
+    <div ref={ref} className="notification-bell">
+      <button type="button" onClick={toggle} aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`} className="notification-bell__trigger">
         <span aria-hidden="true">🔔</span>
-        {unreadCount > 0 && <span style={styles.dot}>{unreadCount > 99 ? "99+" : unreadCount}</span>}
+        {unreadCount > 0 && <span className="notification-bell__count">{unreadCount > 99 ? "99+" : unreadCount}</span>}
       </button>
 
       {open && (
-        <div style={styles.panel} role="dialog" aria-label="Notifications">
-          <div style={styles.panelHeader}>
+        <div className="notification-panel" role="dialog" aria-label="Notifications">
+          <div className="notification-panel__header">
             <strong>Notifications</strong>
-            {unreadCount > 0 && <button type="button" onClick={markAllRead} style={styles.markAll}>Mark all read</button>}
+            {unreadCount > 0 && <button type="button" onClick={markAllRead} className="notification-mark-all">Mark all read</button>}
           </div>
-          {error && <p role="alert" style={styles.error}>{error}</p>}
-          {notifications.length === 0 ? <p style={styles.empty}>No notifications yet.</p> : notifications.map((notification) => {
+          {error && <p role="alert" className="notification-error">{error}</p>}
+          {notifications.length === 0 ? <p className="notification-empty">No notifications yet.</p> : notifications.map((notification) => {
             const actor = notification.actor;
             const href = hrefFor(notification);
             const isConnectionRequest = notification.type === "CONNECTION_REQUEST";
             return (
-              <div key={notification.id} style={{ ...styles.item, ...(notification.readAt ? {} : styles.unreadItem) }}>
-                {actor?.pictureUrl ? <img src={resolveMediaUrl(actor.pictureUrl)} alt="" width={38} height={38} style={styles.avatar} referrerPolicy="no-referrer" />
-                  : <div style={styles.avatarEmpty}>{(actor?.name || "•").charAt(0)}</div>}
-                <div style={styles.itemBody}>
-                  <Link to={href} onClick={() => { markRead(notification).catch(() => {}); setOpen(false); }} style={styles.message}>
+              <div key={notification.id} className={`notification-item${notification.readAt ? "" : " is-unread"}`}>
+                {actor?.pictureUrl ? <img src={resolveMediaUrl(actor.pictureUrl)} alt="" width={38} height={38} className="notification-avatar" referrerPolicy="no-referrer" />
+                  : <div className="notification-avatar notification-avatar--empty">{(actor?.name || "•").charAt(0)}</div>}
+                <div className="notification-item__body">
+                  <Link to={href} onClick={() => { markRead(notification).catch(() => {}); setOpen(false); }} className="notification-message">
                     {notification.message}
                   </Link>
-                  <time style={styles.time} dateTime={notification.createdAt}>{new Date(notification.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</time>
+                  <time className="notification-time" dateTime={notification.createdAt}>{new Date(notification.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</time>
                   {isConnectionRequest && (
-                    <div style={styles.actions}>
-                      <button type="button" onClick={() => respond(notification, true)} disabled={busyId === notification.id} style={styles.accept}>Accept</button>
-                      <button type="button" onClick={() => respond(notification, false)} disabled={busyId === notification.id} style={styles.reject}>Decline</button>
+                    <div className="notification-actions">
+                      <button type="button" onClick={() => respond(notification, true)} disabled={busyId === notification.id} className="notification-accept">Accept</button>
+                      <button type="button" onClick={() => respond(notification, false)} disabled={busyId === notification.id} className="notification-reject">Decline</button>
                     </div>
                   )}
                 </div>
-                {!notification.readAt && <span aria-label="Unread" style={styles.unreadDot} />}
+                {!notification.readAt && <span aria-label="Unread" className="notification-unread-dot" />}
               </div>
             );
           })}
-          <button type="button" onClick={() => { setOpen(false); load(); }} style={styles.refresh}>Refresh</button>
+          <button type="button" onClick={() => { setOpen(false); load(); }} className="notification-refresh">Refresh</button>
         </div>
       )}
     </div>
@@ -131,25 +131,3 @@ function hrefFor(notification) {
   }
 }
 
-const styles = {
-  wrap: { position: "relative" },
-  bellBtn: { position: "relative", border: "none", background: "transparent", cursor: "pointer", fontSize: "1.4rem", lineHeight: 1, padding: "0.25rem" },
-  dot: { position: "absolute", top: 0, right: 0, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 999, background: "#d93025", color: "#fff", fontSize: "0.7rem", lineHeight: "16px", textAlign: "center", boxSizing: "border-box" },
-  panel: { position: "absolute", top: "2.4rem", right: 0, width: 350, maxHeight: 480, overflowY: "auto", background: "#fff", border: "1px solid #e2e2e2", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: "0.5rem", zIndex: 20 },
-  panelHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: ".45rem .5rem", borderBottom: "1px solid #eee" },
-  markAll: { color: "#1a73e8", border: 0, background: "transparent", cursor: "pointer", fontSize: ".8rem" },
-  empty: { color: "#999", padding: "0.6rem 0.5rem", margin: 0 },
-  item: { position: "relative", display: "flex", alignItems: "flex-start", gap: ".55rem", padding: ".6rem .5rem", borderBottom: "1px solid #f5f5f5", borderRadius: 8 },
-  unreadItem: { background: "#f5f8ff" },
-  avatar: { borderRadius: "50%", objectFit: "cover", flexShrink: 0 },
-  avatarEmpty: { width: 38, height: 38, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "#e8eefc", color: "#1a73e8", fontWeight: 700, textTransform: "uppercase", flexShrink: 0 },
-  itemBody: { flex: 1, minWidth: 0 },
-  message: { display: "block", color: "#222", textDecoration: "none", fontSize: ".87rem", lineHeight: 1.35 },
-  time: { display: "block", color: "#888", fontSize: ".72rem", marginTop: ".2rem" },
-  unreadDot: { width: 8, height: 8, borderRadius: "50%", background: "#1a73e8", marginTop: 6, flexShrink: 0 },
-  actions: { display: "flex", gap: ".4rem", marginTop: ".4rem" },
-  accept: { padding: ".25rem .6rem", border: 0, borderRadius: 6, background: "#1a73e8", color: "white", cursor: "pointer", fontSize: ".78rem" },
-  reject: { padding: ".25rem .6rem", border: "1px solid #ccc", borderRadius: 6, background: "white", cursor: "pointer", fontSize: ".78rem" },
-  error: { margin: ".4rem", color: "#c0271c", fontSize: ".82rem" },
-  refresh: { display: "block", margin: ".4rem auto .1rem", padding: ".25rem .6rem", border: 0, background: "transparent", color: "#1a73e8", cursor: "pointer", fontSize: ".8rem" },
-};

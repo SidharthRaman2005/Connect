@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, chatSocketUrl, resolveMediaUrl } from "../lib/api";
 
@@ -17,6 +17,7 @@ export default function Chat() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [socketState, setSocketState] = useState("connecting");
   const [error, setError] = useState("");
+  const [conversationSearch, setConversationSearch] = useState("");
   const socketRef = useRef(null);
   const selectedIdRef = useRef(selectedId);
   const messagesEndRef = useRef(null);
@@ -154,20 +155,46 @@ export default function Chat() {
 
   const selected = conversations.find((item) => item.other.id === selectedId);
   const visibleMessages = historyForId === selectedId ? messages : [];
+  const filteredConversations = useMemo(() => {
+    const query = conversationSearch.trim().toLowerCase();
+    if (!query) return conversations;
+    return conversations.filter((conversation) => {
+      const name = conversation.other.name || "";
+      const branch = conversation.other.branch || "";
+      return `${name} ${branch}`.toLowerCase().includes(query);
+    });
+  }, [conversationSearch, conversations]);
 
   return (
     <main className="inbox-page">
       <header className="inbox-header">
-        <div><h1>Messages</h1><span className="inbox-status">{socketState === "connected" ? "Live" : "Connecting…"}</span></div>
-        <Link className="page-heading__link" to="/dashboard">← Dashboard</Link>
+        <div>
+          <p className="page-eyebrow">CHAT</p>
+          <h1>Messages</h1>
+        </div>
+        <span className="inbox-status">{socketState === "connected" ? "Connected" : "Reconnecting"}</span>
       </header>
       {error && <p role="alert" className="page-error">{error}</p>}
       <div className="inbox-layout">
         <aside className="inbox-sidebar" aria-label="Conversations">
-          <h2>Connections</h2>
+          <div className="inbox-sidebar__heading">
+            <h2>Chats</h2>
+            <span>{conversations.length}</span>
+          </div>
+          <label className="inbox-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              value={conversationSearch}
+              onChange={(event) => setConversationSearch(event.target.value)}
+              placeholder="Search conversations"
+              aria-label="Search conversations"
+            />
+          </label>
           {loadingConversations ? <p className="inbox-muted">Loading…</p> : conversations.length === 0 ? (
             <p className="inbox-muted">Connect with a student to start chatting.</p>
-          ) : conversations.map((conversation) => (
+          ) : filteredConversations.length === 0 ? (
+            <p className="inbox-muted">No matching conversations.</p>
+          ) : filteredConversations.map((conversation) => (
             <button key={conversation.other.id} type="button" onClick={() => setSelectedId(conversation.other.id)}
               className={`inbox-conversation${selectedId === conversation.other.id ? " is-selected" : ""}`}>
               <Avatar student={conversation.other} />
@@ -184,7 +211,11 @@ export default function Chat() {
           {selected ? <>
             <div className="inbox-chat__header">
               <Avatar student={selected.other} size={42} />
-              <div><strong>{selected.other.name || "Student"}</strong><div className="inbox-muted">{[selected.other.branch, selected.other.batch && `Batch ${selected.other.batch}`].filter(Boolean).join(" · ")}</div></div>
+              <div className="inbox-chat__identity">
+                <strong>{selected.other.name || "Student"}</strong>
+                <div className="inbox-muted">{[selected.other.branch, selected.other.batch && `Batch ${selected.other.batch}`].filter(Boolean).join(" · ")}</div>
+              </div>
+              <Link className="inbox-profile-link" to={`/students/${selected.other.id}`} aria-label="View profile">View profile <span>→</span></Link>
             </div>
             <div className="inbox-messages">
               {totalPages > page + 1 && <button type="button" onClick={() => loadHistory(selectedId, page + 1, true)} disabled={loadingMessages} className="inbox-older">Load older messages</button>}

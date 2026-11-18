@@ -9,8 +9,8 @@ const navigation = [
   { to: "/discover", label: "Discover", icon: "⌕" },
   { to: "/connections", label: "Network", icon: "◌" },
   { to: "/collabs", label: "Collabs", icon: "✦" },
-  { to: "/chat", label: "Inbox", icon: "↗" },
-  { to: "/highlights", label: "Highlights", icon: "◇" },
+  { to: "/chat", label: "Chat", icon: "↗" },
+  { to: "/blogs", label: "Blogs", icon: "▤" },
   { to: "/profile", label: "Profile", icon: "○" },
 ];
 

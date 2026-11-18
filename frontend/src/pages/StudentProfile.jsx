@@ -13,7 +13,6 @@ export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [highlights, setHighlights] = useState([]);
   const [connecting, setConnecting] = useState(false);
   const [connectMsg, setConnectMsg] = useState("");
 
@@ -46,10 +45,6 @@ export default function StudentProfile() {
         else setError(e.message || "Failed to load profile.");
       })
       .finally(() => active && setLoading(false));
-    api
-      .get(`/students/${id}/highlights`)
-      .then((h) => active && setHighlights(h || []))
-      .catch(() => active && setHighlights([]));
     return () => {
       active = false;
     };
@@ -129,32 +124,6 @@ export default function StudentProfile() {
             ) : null
           )}
 
-          {highlights.length > 0 && (
-            <div className="profile-highlights">
-              <h2>
-                Highlights
-              </h2>
-              {highlights.map((h) => (
-                <div key={h.id} className="highlight-card">
-                  <div className="highlight-card__heading">
-                    <strong>{h.title}</strong>
-                    <span className="highlight-card__status">
-                      {h.status === "IN_PROGRESS" ? "In progress" : h.status === "COMPLETED" ? "Completed" : "Idea"}
-                    </span>
-                  </div>
-                  {h.description && <p>{h.description}</p>}
-                  {h.tags?.length > 0 && (
-                    <div className="profile-tags">
-                      {h.tags.map((t) => (
-                        <span key={t} className="profile-tag">{t}</span>
-                      ))}
-                    </div>
-                  )}
-                  {h.link && <a href={h.link} target="_blank" rel="noreferrer" className="highlight-card__link">Link ↗</a>}
-                </div>
-              ))}
-            </div>
-          )}
         </>
       )}
     </div>
