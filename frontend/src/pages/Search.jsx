@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api";
-import StudentCard from "../components/StudentCard";
+import { api, resolveMediaUrl } from "../lib/api";
 
 const PAGE_SIZE = 12;
 
-/**
- * People search (M3.1): filter the directory by name, branch, batch, and tags,
- * with pagination. Connecting is done inline on each result card (M3.2).
- */
 export default function Search() {
   const [catalog, setCatalog] = useState([]);
   const [q, setQ] = useState("");
@@ -16,247 +11,204 @@ export default function Search() {
   const [batch, setBatch] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState(() => new Set());
   const [tagQuery, setTagQuery] = useState("");
-
-  const [results, setResults] = useState(null); // PageResponse or null
+  const [results, setResults] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
-    api.get("/tags").then((t) => setCatalog(t || [])).catch(() => setCatalog([]));
+    api.get("/tags").then((tags) => setCatalog(tags || [])).catch(() => setCatalog([]));
   }, []);
 
-  const byId = useMemo(() => new Map(catalog.map((t) => [t.id, t])), [catalog]);
+  const byId = useMemo(() => new Map(catalog.map((tag) => [tag.id, tag])), [catalog]);
 
-  const runSearch = useCallback(
-    async (nextPage = 0) => {
+  const runSearch = useCallback(async (nextPage = 0) => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (q.trim()) params.set("q", q.trim());
+      if (branch.trim()) params.set("branch", branch.trim());
+      if (batch.trim()) params.set("batch", batch.trim());
+      for (const id of selectedTagIds) params.append("tagIds", id);
+      params.set("page", nextPage);
+      params.set("size", PAGE_SIZE);
+      const response = await api.get(`/students/search?${params.toString()}`);
+      setResults(response);
+      setPage(nextPage);
+    } catch (requestError) {
+      setError(requestError.message || "Search failed.");
+    } finally {
+      setLoading(false);
+    }
+  }, [q, branch, batch, selectedTagIds]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
       setLoading(true);
-      setError("");
       try {
-        const params = new URLSearchParams();
-        if (q.trim()) params.set("q", q.trim());
-        if (branch.trim()) params.set("branch", branch.trim());
-        if (batch.trim()) params.set("batch", batch.trim());
-        for (const id of selectedTagIds) params.append("tagIds", id);
-        params.set("page", nextPage);
-        params.set("size", PAGE_SIZE);
-        const res = await api.get(`/students/search?${params.toString()}`);
-        setResults(res);
-        setPage(nextPage);
-      } catch (e) {
-        setError(e.message || "Search failed.");
+        const response = await api.get("/students/search?page=0&size=12");
+        setResults(response);
+        setPage(0);
+      } catch (requestError) {
+        setError(requestError.message || "Search failed.");
       } finally {
         setLoading(false);
       }
-    },
-    [q, branch, batch, selectedTagIds]
-  );
-
-  // Initial load: show everyone (deferred so it doesn't setState during the effect).
-  useEffect(() => {
-    const t = setTimeout(() => runSearch(0), 0);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const tagSuggestions = useMemo(() => {
     const query = tagQuery.trim().toLowerCase();
     if (!query) return [];
     return catalog
-      .filter((t) => !selectedTagIds.has(t.id) && t.name.toLowerCase().includes(query))
+      .filter((tag) => !selectedTagIds.has(tag.id) && tag.name.toLowerCase().includes(query))
       .slice(0, 8);
   }, [tagQuery, catalog, selectedTagIds]);
 
   const addTag = (id) => {
-    setSelectedTagIds((prev) => new Set(prev).add(id));
+    setSelectedTagIds((current) => new Set(current).add(id));
     setTagQuery("");
   };
-  const removeTag = (id) =>
-    setSelectedTagIds((prev) => {
-      const next = new Set(prev);
+
+  const removeTag = (id) => {
+    setSelectedTagIds((current) => {
+      const next = new Set(current);
       next.delete(id);
       return next;
     });
+  };
 
   const connect = async (id) => {
     setBusyId(id);
+    setError("");
     try {
       await api.post("/connections", { addresseeId: id });
-      setResults((prev) =>
-        prev
-          ? {
-              ...prev,
-              content: prev.content.map((c) =>
-                c.id === id ? { ...c, relation: "PENDING_OUTGOING" } : c
-              ),
-            }
-          : prev
-      );
-    } catch (e) {
-      setError(e.message || "Could not send request.");
+      setResults((current) => current ? {
+        ...current,
+        content: current.content.map((student) => (
+          student.id === id ? { ...student, relation: "PENDING_OUTGOING" } : student
+        )),
+      } : current);
+    } catch (requestError) {
+      setError(requestError.message || "Could not send request.");
     } finally {
       setBusyId(null);
     }
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.headerRow}>
-        <h1 style={{ margin: 0 }}>Find people</h1>
-        <Link to="/dashboard" style={styles.muted}>← Dashboard</Link>
+    <div className="search-page">
+      <div className="page-heading">
+        <div>
+          <p className="page-eyebrow">ADVANCED SEARCH</p>
+          <h1>Find people.</h1>
+          <p className="page-subtitle">Search classmates by name, branch, batch, or shared interests.</p>
+        </div>
+        <Link className="page-heading__link" to="/discover">Back to discover <span>→</span></Link>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          runSearch(0);
-        }}
-      >
-        <div style={styles.filters}>
-          <input style={styles.input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name" />
-          <input style={styles.input} value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="Branch (e.g. CSE)" />
+      <form className="search-panel" onSubmit={(event) => { event.preventDefault(); runSearch(0); }}>
+        <label className="search-name-field">
+          <span aria-hidden="true">⌕</span>
           <input
-            style={styles.input}
-            value={batch}
-            onChange={(e) => setBatch(e.target.value)}
-            placeholder="Batch (e.g. 26)"
-            inputMode="numeric"
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+            placeholder="Search by name"
+            aria-label="Search by name"
           />
+        </label>
+        <div className="search-filter-row">
+          <input value={branch} onChange={(event) => setBranch(event.target.value)} placeholder="Branch — e.g. CSE" aria-label="Branch" />
+          <input value={batch} onChange={(event) => setBatch(event.target.value)} placeholder="Batch — e.g. 26" inputMode="numeric" aria-label="Batch" />
+          <button type="submit" disabled={loading}>{loading ? "Searching…" : "Search"} <span>→</span></button>
         </div>
 
         {selectedTagIds.size > 0 && (
-          <div style={styles.chips}>
+          <div className="search-selected-tags">
             {[...selectedTagIds].map((id) => (
-              <span key={id} style={styles.chipOn}>
-                {byId.get(id)?.name || id}
-                <button type="button" onClick={() => removeTag(id)} style={styles.chipRemove} aria-label="Remove">×</button>
-              </span>
+              <span key={id}>{byId.get(id)?.name || id}<button type="button" onClick={() => removeTag(id)} aria-label={`Remove ${byId.get(id)?.name || "tag"}`}>×</button></span>
             ))}
           </div>
         )}
 
-        <div style={{ position: "relative", marginTop: "0.6rem" }}>
+        <div className="search-tag-field">
           <input
-            style={styles.input}
             value={tagQuery}
-            onChange={(e) => setTagQuery(e.target.value)}
-            placeholder="Filter by tag — search skills, interests, clubs"
+            onChange={(event) => setTagQuery(event.target.value)}
+            placeholder="Filter by skills, interests, or clubs"
+            aria-label="Filter by tag"
           />
           {tagSuggestions.length > 0 && (
-            <ul style={styles.suggestions}>
-              {tagSuggestions.map((t) => (
-                <li key={t.id}>
-                  <button type="button" onClick={() => addTag(t.id)} style={styles.suggestion}>
-                    {t.name} <span style={styles.suggestionCat}>{t.category}</span>
-                  </button>
-                </li>
+            <div className="search-tag-suggestions">
+              {tagSuggestions.map((tag) => (
+                <button type="button" key={tag.id} onClick={() => addTag(tag.id)}>
+                  <strong>{tag.name}</strong><small>{tag.category}</small>
+                </button>
               ))}
-            </ul>
-          )}
-        </div>
-
-        <button type="submit" style={styles.search} disabled={loading}>
-          {loading ? "Searching…" : "Search"}
-        </button>
-      </form>
-
-      {error && <p style={styles.error} role="alert">{error}</p>}
-
-      {results && (
-        <>
-          <p style={{ color: "#777" }}>{results.totalElements} student(s) found.</p>
-          <div style={styles.grid}>
-            {results.content.map((card) => (
-              <StudentCard key={card.id} card={card} onConnect={connect} busy={busyId === card.id} />
-            ))}
-          </div>
-          {results.totalPages > 1 && (
-            <div style={styles.pager}>
-              <button onClick={() => runSearch(page - 1)} disabled={page <= 0} style={styles.pageBtn}>
-                ← Prev
-              </button>
-              <span style={{ color: "#777" }}>
-                Page {page + 1} of {results.totalPages}
-              </span>
-              <button
-                onClick={() => runSearch(page + 1)}
-                disabled={page + 1 >= results.totalPages}
-                style={styles.pageBtn}
-              >
-                Next →
-              </button>
             </div>
           )}
-        </>
+        </div>
+      </form>
+
+      {error && <p className="page-error" role="alert">{error}</p>}
+
+      {results && (
+        <section className="search-results">
+          <div className="search-results__heading">
+            <h2>People</h2>
+            <span>{results.totalElements} found</span>
+          </div>
+          {results.content.length ? (
+            <div className="search-result-list">
+              {results.content.map((student) => (
+                <SearchResult key={student.id} student={student} busy={busyId === student.id} onConnect={connect} />
+              ))}
+            </div>
+          ) : (
+            <div className="search-empty">
+              <span aria-hidden="true">⌕</span>
+              <h3>No people found</h3>
+              <p>Try removing a filter or searching a broader branch or tag.</p>
+            </div>
+          )}
+          {results.totalPages > 1 && (
+            <div className="search-pager">
+              <button type="button" onClick={() => runSearch(page - 1)} disabled={page <= 0}>← Previous</button>
+              <span>Page {page + 1} of {results.totalPages}</span>
+              <button type="button" onClick={() => runSearch(page + 1)} disabled={page + 1 >= results.totalPages}>Next →</button>
+            </div>
+          )}
+        </section>
       )}
     </div>
   );
 }
 
-const styles = {
-  page: { maxWidth: 760, margin: "0 auto", padding: "2rem" },
-  headerRow: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1.25rem" },
-  filters: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" },
-  input: {
-    width: "100%",
-    padding: "0.5rem 0.65rem",
-    fontSize: "1rem",
-    border: "1px solid #ccc",
-    borderRadius: 8,
-    boxSizing: "border-box",
-  },
-  chips: { display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.6rem" },
-  chipOn: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.35rem",
-    padding: "0.3rem 0.4rem 0.3rem 0.7rem",
-    borderRadius: 999,
-    background: "#1a73e8",
-    color: "#fff",
-    fontSize: "0.85rem",
-  },
-  chipRemove: {
-    border: "none",
-    background: "rgba(255,255,255,0.25)",
-    color: "#fff",
-    borderRadius: "50%",
-    width: 18,
-    height: 18,
-    cursor: "pointer",
-    padding: 0,
-  },
-  suggestions: {
-    listStyle: "none",
-    margin: "0.25rem 0 0",
-    padding: "0.25rem",
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    maxHeight: 220,
-    overflowY: "auto",
-    background: "#fff",
-    position: "absolute",
-    zIndex: 5,
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  suggestion: { display: "block", width: "100%", padding: "0.45rem 0.6rem", border: "none", borderRadius: 6, background: "transparent", cursor: "pointer", textAlign: "left" },
-  suggestionCat: { fontSize: "0.75rem", color: "#999", textTransform: "uppercase" },
-  search: {
-    marginTop: "0.75rem",
-    padding: "0.55rem 1.4rem",
-    border: "none",
-    borderRadius: 8,
-    background: "#1a73e8",
-    color: "#fff",
-    cursor: "pointer",
-    fontSize: "1rem",
-  },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" },
-  pager: { display: "flex", alignItems: "center", gap: "1rem", justifyContent: "center", marginTop: "1.5rem" },
-  pageBtn: { padding: "0.45rem 0.9rem", borderRadius: 8, border: "1px solid #ccc", background: "#fff", cursor: "pointer" },
-  muted: { color: "#888", textDecoration: "none" },
-  error: { color: "#c0271c" },
-};
+function SearchResult({ student, busy, onConnect }) {
+  const meta = [student.branch, student.batch && `Batch ${student.batch}`].filter(Boolean).join(" · ");
+  const fallback = `https://i.pravatar.cc/120?img=${((Number(student.id) || 1) % 70) + 1}`;
+  const picture = student.pictureUrl ? resolveMediaUrl(student.pictureUrl) : fallback;
+  return (
+    <article className="search-result">
+      <Link className="search-result__profile" to={`/students/${student.id}`}>
+        <img src={picture} alt={student.name || "Student"} referrerPolicy="no-referrer" />
+        <span>
+          <strong>{student.name || "Student"}</strong>
+          <small>{meta || "VIT-AP student"}</small>
+        </span>
+      </Link>
+      {student.sharedTagCount > 0 && <span className="search-result__match">{student.sharedTagCount} shared</span>}
+      <SearchAction student={student} busy={busy} onConnect={onConnect} />
+    </article>
+  );
+}
+
+function SearchAction({ student, busy, onConnect }) {
+  if (student.relation === "CONNECTED") return <Link className="search-result__action is-connected" to={`/chat?with=${student.id}`}>Connected <span>→</span></Link>;
+  if (student.relation === "PENDING_OUTGOING") return <span className="search-result__action is-requested">Requested</span>;
+  if (student.relation === "PENDING_INCOMING") return <Link className="search-result__action is-response" to="/connections">Respond</Link>;
+  return <button type="button" className="search-result__action" onClick={() => onConnect(student.id)} disabled={busy}>{busy ? "Sending…" : "Connect"} <span>+</span></button>;
+}
