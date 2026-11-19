@@ -2,6 +2,7 @@ package com.connect.service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,39 @@ public class NotificationService {
     public void create(Student recipient, Student actor, NotificationType type,
                        Long referenceId, String message) {
         notificationRepository.save(new Notification(recipient, actor, type, referenceId, message));
+    }
+
+    /**
+     * One aggregated message notification per unread conversation instead of one
+     * notification per message. Repeated messages simply update the count.
+     */
+    @Transactional
+    public void recordMessage(Student recipient, Student actor, long unreadCount) {
+        String text = unreadCount == 1
+                ? actor.getName() + " sent you a message."
+                : actor.getName() + " sent you " + unreadCount + " new messages.";
+        Optional<Notification> existing = notificationRepository
+                .findFirstByRecipientIdAndActorIdAndTypeAndReadAtIsNull(
+                        recipient.getId(), actor.getId(), NotificationType.MESSAGE);
+        if (existing.isPresent()) {
+            Notification notification = existing.get();
+            notification.setMessage(text);
+            notificationRepository.save(notification);
+        } else {
+            notificationRepository.save(new Notification(
+                    recipient, actor, NotificationType.MESSAGE, actor.getId(), text));
+        }
+    }
+
+    /** Marks the aggregated message notification for a conversation as read. */
+    @Transactional
+    public void markMessageNotificationRead(Long recipientId, Long actorId) {
+        notificationRepository.findFirstByRecipientIdAndActorIdAndTypeAndReadAtIsNull(
+                        recipientId, actorId, NotificationType.MESSAGE)
+                .ifPresent(notification -> {
+                    notification.setReadAt(Instant.now());
+                    notificationRepository.save(notification);
+                });
     }
 
     @Transactional(readOnly = true)

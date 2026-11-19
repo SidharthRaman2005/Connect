@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api, setAuthToken, setUnauthorizedHandler } from "../lib/api";
 
 const TOKEN_KEY = "connect_token";
@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(() => Boolean(readToken()));
   const [authError, setAuthError] = useState(null);
+  const verifyingRef = useRef(false);
 
   const clearSession = useCallback((message = null) => {
     storeToken(null);
@@ -59,7 +60,16 @@ export function AuthProvider({ children }) {
   }, [clearSession]);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => clearSession("Your session expired. Please sign in again."));
+    // A single 401 (e.g. a transient endpoint error) should not destroy the
+    // session. Re-check /auth/me with the same token first; only a genuine
+    // authentication failure clears the stored session.
+    setUnauthorizedHandler(() => {
+      if (verifyingRef.current) return;
+      verifyingRef.current = true;
+      api.get("/auth/me")
+        .catch(() => clearSession("Your session expired. Please sign in again."))
+        .finally(() => { verifyingRef.current = false; });
+    });
     void Promise.resolve().then(restoreSession);
 
     const handleStorage = (event) => {

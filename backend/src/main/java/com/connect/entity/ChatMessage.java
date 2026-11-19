@@ -43,6 +43,13 @@ public class ChatMessage {
     @Column(name = "read_at")
     private Instant readAt;
 
+    @Column(name = "edited_at")
+    private Instant editedAt;
+
+    /** Non-null when the sender unsent the message. Content is blanked on unsend. */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     protected ChatMessage() {}
 
     public ChatMessage(Student sender, Student recipient, String content) {
@@ -62,5 +69,21 @@ public class ChatMessage {
     public String getContent() { return content; }
     public Instant getSentAt() { return sentAt; }
     public Instant getReadAt() { return readAt; }
+    public Instant getEditedAt() { return editedAt; }
+    public Instant getDeletedAt() { return deletedAt; }
+    public boolean isDeleted() { return deletedAt != null; }
+
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
+
+    /** Replaces the text and records when the edit happened. */
+    public void edit(String newContent) {
+        this.content = newContent;
+        this.editedAt = Instant.now();
+    }
+
+    /** Soft-delete: keeps the row (so pagination stays stable) but drops the text. */
+    public void unsend() {
+        this.deletedAt = Instant.now();
+        this.content = "";
+    }
 }

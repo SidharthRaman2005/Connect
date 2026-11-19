@@ -4,7 +4,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeProvider";
 
-const HIGHLIGHTS = [
+const FEATURES = [
   { icon: "⌕", title: "Find your people", text: "Discover students who share your interests, skills and ambitions." },
   { icon: "✦", title: "Build together", text: "Post an opportunity or join a project, hackathon or research team." },
   { icon: "✉", title: "Stay connected", text: "Message your connections and keep every conversation in one place." },
@@ -74,7 +74,7 @@ export default function Login() {
             <p className="auth-hint"><span aria-hidden="true">●</span> Only verified @vitapstudent.ac.in accounts can join</p>
           </div>
           <div className="auth-features">
-            {HIGHLIGHTS.map((item) => (
+            {FEATURES.map((item) => (
               <div className="auth-aside__item" key={item.title}>
                 <span className="auth-aside__icon" aria-hidden="true">{item.icon}</span>
                 <div><strong>{item.title}</strong><span>{item.text}</span></div>

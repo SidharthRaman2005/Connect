@@ -15,6 +15,9 @@ import com.connect.entity.ChatMessage;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
+    // Two variants for each query: PostgreSQL cannot infer the type of a null
+    // `:after` bind parameter, so we never send it as null.
+
     @Query("""
             select m from ChatMessage m
             where (m.sender.id = :a and m.recipient.id = :b)
@@ -25,13 +28,25 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     @Query("""
             select m from ChatMessage m
-            where (m.sender.id = :a and m.recipient.id = :b)
-               or (m.sender.id = :b and m.recipient.id = :a)
+            where ((m.sender.id = :a and m.recipient.id = :b)
+               or (m.sender.id = :b and m.recipient.id = :a))
+              and m.sentAt > :after
             order by m.sentAt desc, m.id desc
             """)
-    List<ChatMessage> findLatest(@Param("a") Long a, @Param("b") Long b, Pageable pageable);
+    Page<ChatMessage> findConversationAfter(@Param("a") Long a, @Param("b") Long b,
+                                            @Param("after") Instant after, Pageable pageable);
+
+    Optional<ChatMessage> findByIdAndSenderId(Long id, Long senderId);
 
     long countBySenderIdAndRecipientIdAndReadAtIsNull(Long senderId, Long recipientId);
+
+    @Query("""
+            select count(m) from ChatMessage m
+            where m.sender.id = :sender and m.recipient.id = :recipient
+              and m.readAt is null and m.sentAt > :after
+            """)
+    long countUnreadAfter(@Param("sender") Long senderId, @Param("recipient") Long recipientId,
+                          @Param("after") Instant after);
 
     @Modifying
     @Query("""

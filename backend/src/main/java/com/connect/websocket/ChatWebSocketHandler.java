@@ -9,12 +9,17 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.connect.dto.ChatEventDto;
 import com.connect.dto.ChatMessageDto;
-import com.connect.dto.SendChatMessageRequest;
+import com.connect.dto.WsChatRequest;
 import com.connect.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/** Small JSON WebSocket protocol: clients send {recipientId, content}. */
+/**
+ * Chat socket protocol. Clients send {@code {type, recipientId, content}};
+ * the server pushes typed {@link ChatEventDto} envelopes:
+ * message / delivered / read / error.
+ */
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final ChatService chatService;
@@ -34,15 +39,40 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage text) {
-        Long senderId = (Long) session.getAttributes().get("studentId");
+        Long me = (Long) session.getAttributes().get("studentId");
         try {
-            SendChatMessageRequest request = objectMapper.readValue(text.getPayload(), SendChatMessageRequest.class);
-            ChatMessageDto message = chatService.send(senderId, request.recipientId(), request.content());
-            sendToStudent(senderId, message);
-            sendToStudent(request.recipientId(), message);
+            WsChatRequest request = objectMapper.readValue(text.getPayload(), WsChatRequest.class);
+            if (request == null || request.recipientId() == null) {
+                sendError(session, "Choose a student first.");
+                return;
+            }
+            if (request.isRead()) {
+                chatService.markRead(me, request.recipientId());
+                sendToStudent(request.recipientId(), ChatEventDto.read(me));
+                return;
+            }
+            ChatMessageDto message = chatService.send(me, request.recipientId(), request.content());
+            ChatEventDto event = ChatEventDto.message(message);
+            sendToStudent(me, event);
+            sendToStudent(request.recipientId(), event);
+            if (isOnline(request.recipientId())) {
+                sendToStudent(me, ChatEventDto.delivered(message.id()));
+            }
         } catch (Exception exception) {
             sendError(session, exception.getMessage() == null ? "Message could not be sent." : exception.getMessage());
         }
+    }
+
+    /** Pushes an edited or unsent message to both participants. */
+    public void broadcastMessage(ChatMessageDto message) {
+        ChatEventDto event = ChatEventDto.message(message);
+        sendToStudent(message.senderId(), event);
+        sendToStudent(message.recipientId(), event);
+    }
+
+    public boolean isOnline(Long studentId) {
+        Set<WebSocketSession> studentSessions = sessions.get(studentId);
+        return studentSessions != null && studentSessions.stream().anyMatch(WebSocketSession::isOpen);
     }
 
     @Override
@@ -55,10 +85,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void sendToStudent(Long studentId, ChatMessageDto message) {
+    private void sendToStudent(Long studentId, ChatEventDto event) {
         Set<WebSocketSession> studentSessions = sessions.get(studentId);
         if (studentSessions == null) return;
-        studentSessions.forEach(session -> send(session, message));
+        studentSessions.forEach(session -> send(session, event));
     }
 
     private void send(WebSocketSession session, Object payload) {
@@ -73,13 +103,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void sendError(WebSocketSession session, String message) {
-        try {
-            synchronized (session) {
-                if (session.isOpen()) session.sendMessage(new TextMessage(objectMapper.writeValueAsString(
-                        java.util.Map.of("error", message))));
-            }
-        } catch (Exception ignored) {
-            // The socket may have closed before the error could be delivered.
-        }
+        send(session, ChatEventDto.error(message));
     }
 }

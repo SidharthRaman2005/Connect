@@ -18,14 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.connect.entity.CollabPost;
 import com.connect.entity.CollabType;
-import com.connect.entity.Highlight;
-import com.connect.entity.HighlightStatus;
 import com.connect.entity.ProfileVisibility;
 import com.connect.entity.Student;
 import com.connect.entity.Tag;
 import com.connect.entity.TagStatus;
 import com.connect.repository.CollabPostRepository;
-import com.connect.repository.HighlightRepository;
 import com.connect.repository.StudentRepository;
 import com.connect.repository.TagRepository;
 
@@ -75,16 +72,13 @@ public class DevDataSeeder implements ApplicationRunner {
 
     private final StudentRepository studentRepository;
     private final TagRepository tagRepository;
-    private final HighlightRepository highlightRepository;
     private final CollabPostRepository collabPostRepository;
 
     public DevDataSeeder(StudentRepository studentRepository,
                          TagRepository tagRepository,
-                         HighlightRepository highlightRepository,
                          CollabPostRepository collabPostRepository) {
         this.studentRepository = studentRepository;
         this.tagRepository = tagRepository;
-        this.highlightRepository = highlightRepository;
         this.collabPostRepository = collabPostRepository;
     }
 
@@ -127,32 +121,7 @@ public class DevDataSeeder implements ApplicationRunner {
         }
         log.info("Dev data seeded: {} dummy students inserted.", n);
 
-        seedExampleHighlights(saved);
         seedExampleCollabs(saved);
-    }
-
-    /** A few example highlights so the showcase has something to model. */
-    private void seedExampleHighlights(List<Student> students) {
-        highlight(students.get(1), "Published a paper on CNN pruning", HighlightStatus.COMPLETED,
-                "Accepted at a student research symposium.", List.of("Machine Learning", "Research"),
-                "https://example.com/paper");
-        highlight(students.get(3), "National-level Bharatanatyam performance", HighlightStatus.COMPLETED,
-                "Represented the university at the national youth festival.", List.of("Dance", "Culture"), null);
-        highlight(students.get(4), "Captained the inter-college football team", HighlightStatus.COMPLETED,
-                "Led the team to the regional finals.", List.of("Football", "Leadership"), null);
-        highlight(students.get(10), "Runner-up, state badminton championship", HighlightStatus.COMPLETED,
-                "Men's singles, state-level tournament.", List.of("Badminton", "Sports"), null);
-    }
-
-    private void highlight(Student owner, String title, HighlightStatus status,
-                           String description, List<String> tags, String link) {
-        Highlight h = new Highlight(owner);
-        h.setTitle(title);
-        h.setStatus(status);
-        h.setDescription(description);
-        h.setTags(new ArrayList<>(tags));
-        h.setLink(link);
-        highlightRepository.save(h);
     }
 
     /** A few open collab posts so the recent-posts feed has content. */

@@ -74,6 +74,7 @@ public class Notification {
     public NotificationType getType() { return type; }
     public Long getReferenceId() { return referenceId; }
     public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getReadAt() { return readAt; }
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
