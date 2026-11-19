@@ -72,7 +72,7 @@ export default function AddCollab() {
         <label>Description<textarea value={form.description} onChange={update("description")} placeholder="What are you building, and who would you like to join?" maxLength={2000} /></label>
         <label>Opportunity type<select value={form.type} onChange={update("type")}>{TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
         {error && <p className="page-error" role="alert">{error}</p>}
-        <button className="accent-button" type="submit" disabled={saving}>{saving ? "Publishing…" : "Publish opportunity"} <span>→</span></button>
+        <button className="btn btn--primary" type="submit" disabled={saving}>{saving ? "Publishing…" : "Publish opportunity"} <span>→</span></button>
       </form>
       <section className="manage-section">
         <div className="section-title-row"><h2>Your collabs</h2><span>{mine.length}</span></div>
@@ -87,9 +87,9 @@ function ManagedCollab({ post, onAccept, onClose }) {
   const members = (post.requests || []).filter((request) => request.status === "ACCEPTED");
   return (
     <article className="managed-collab">
-      <div className="managed-collab__heading"><h3>{post.title}</h3><span className={`status-pill status-pill--${post.status === "OPEN" ? "open" : "closed"}`}>{post.status === "OPEN" ? "Open" : "Closed"}</span>{post.status === "OPEN" && <button type="button" className="small-button" onClick={() => onClose(post.id)}>Close</button>}</div>
+      <div className="managed-collab__heading"><h3>{post.title}</h3><span className={`status-pill status-pill--${post.status === "OPEN" ? "open" : "closed"}`}>{post.status === "OPEN" ? "Open" : "Closed"}</span>{post.status === "OPEN" && <button type="button" className="btn btn--sm btn--secondary" onClick={() => onClose(post.id)}>Close</button>}</div>
       <p className="managed-collab__summary">{pending.length} pending · {members.length} in</p>
-      {pending.map((request) => <Applicant key={request.id} applicant={request.applicant}><button className="small-button small-button--accent" type="button" onClick={() => onAccept(request.id)}>Accept</button></Applicant>)}
+      {pending.map((request) => <Applicant key={request.id} applicant={request.applicant}><button className="btn btn--sm btn--primary" type="button" onClick={() => onAccept(request.id)}>Accept</button></Applicant>)}
       {members.map((request) => <Applicant key={request.id} applicant={request.applicant}><span className="status-pill status-pill--open">✓ In</span></Applicant>)}
       {!pending.length && !members.length && <p className="connection-empty">No requests yet.</p>}
     </article>

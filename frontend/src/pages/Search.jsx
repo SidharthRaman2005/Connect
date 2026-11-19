@@ -123,7 +123,7 @@ export default function Search() {
         <div className="search-filter-row">
           <input value={branch} onChange={(event) => setBranch(event.target.value)} placeholder="Branch — e.g. CSE" aria-label="Branch" />
           <input value={batch} onChange={(event) => setBatch(event.target.value)} placeholder="Batch — e.g. 26" inputMode="numeric" aria-label="Batch" />
-          <button type="submit" disabled={loading}>{loading ? "Searching…" : "Search"} <span>→</span></button>
+          <button type="submit" className="btn btn--primary" disabled={loading}>{loading ? "Searching…" : "Search"} <span aria-hidden="true">→</span></button>
         </div>
 
         {selectedTagIds.size > 0 && (

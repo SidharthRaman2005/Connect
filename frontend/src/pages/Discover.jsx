@@ -56,7 +56,7 @@ export default function Discover() {
           <strong>Recommended for you</strong>
           <span>Ranked by shared interests and profile fit</span>
         </div>
-        <button type="button" className="ghost-button" onClick={loadStudents} disabled={loading}>
+        <button type="button" className="btn btn--secondary" onClick={loadStudents} disabled={loading}>
           {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
@@ -77,11 +77,11 @@ export default function Discover() {
           ))}
         </div>
       ) : (
-        <div className="discover-empty">
-          <span aria-hidden="true">◎</span>
+        <div className="empty-state">
+          <span className="empty-state__icon" aria-hidden="true">◎</span>
           <h2>No recommendations yet</h2>
           <p>Add more skills and interests to your profile so Connect can find better matches.</p>
-          <Link className="accent-button" to="/profile">Update profile <span>→</span></Link>
+          <Link className="btn btn--primary" to="/profile">Update profile <span aria-hidden="true">→</span></Link>
         </div>
       )}
     </div>

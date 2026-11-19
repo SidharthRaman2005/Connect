@@ -46,7 +46,7 @@ export default function Collabs() {
           <h1>Build together.</h1>
           <p className="page-subtitle">Find open projects, hackathons, research teams, and campus opportunities.</p>
         </div>
-        <Link className="accent-button" to="/collabs/add">Post an opportunity <span>+</span></Link>
+        <Link className="btn btn--primary" to="/collabs/add">Post an opportunity <span aria-hidden="true">+</span></Link>
       </div>
       {error && <p className="page-error" role="alert">{error}</p>}
       {loading ? (
@@ -56,11 +56,11 @@ export default function Collabs() {
           {posts.map((post) => <CollabCard key={post.id} post={post} busy={busyId === post.id} onRequest={request} />)}
         </div>
       ) : (
-        <div className="discover-empty">
-          <span aria-hidden="true">✦</span>
+        <div className="empty-state">
+          <span className="empty-state__icon" aria-hidden="true">✦</span>
           <h2>No open opportunities yet</h2>
           <p>Start a project and invite the right people to build it with you.</p>
-          <Link className="accent-button" to="/collabs/add">Create the first post <span>→</span></Link>
+          <Link className="btn btn--primary" to="/collabs/add">Create the first post <span aria-hidden="true">→</span></Link>
         </div>
       )}
     </div>

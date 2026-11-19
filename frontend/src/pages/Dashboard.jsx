@@ -35,10 +35,9 @@ export default function Dashboard() {
       <div className="dashboard-heading">
         <div>
           <p className="dashboard-eyebrow">YOUR CONNECT SPACE</p>
-          <h1>Hey, {firstName} <span aria-hidden="true">👋</span></h1>
+          <h1>Welcome back, {firstName}</h1>
           <p className="dashboard-subtitle">A good project starts with the right people.</p>
         </div>
-        <span className="dashboard-notifications">Updates are in the bell <span aria-hidden="true">⌁</span></span>
       </div>
 
       <section className="dashboard-hero">
@@ -48,7 +47,7 @@ export default function Dashboard() {
           <p>Find teammates, share what you are building, and make campus connections.</p>
         </div>
         <div className="dashboard-hero__actions">
-          <button type="button" className="dashboard-hero__secondary" onClick={() => navigate("/collabs")}>Explore opportunities <span>→</span></button>
+          <button type="button" className="btn btn--primary" onClick={() => navigate("/collabs")}>Explore opportunities <span aria-hidden="true">→</span></button>
         </div>
       </section>
 

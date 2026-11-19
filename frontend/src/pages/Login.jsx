@@ -4,11 +4,13 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeProvider";
 
-/**
- * Landing / sign-in page. The Google credential is sent to the backend, which
- * verifies it and enforces the college-email rule server-side — the frontend
- * does not decide who may sign in.
- */
+const HIGHLIGHTS = [
+  { icon: "⌕", title: "Find your people", text: "Discover students who share your interests, skills and ambitions." },
+  { icon: "✦", title: "Build together", text: "Post an opportunity or join a project, hackathon or research team." },
+  { icon: "✉", title: "Stay connected", text: "Message your connections and keep every conversation in one place." },
+];
+
+/** Landing / sign-in page. The backend verifies the Google token and enforces the college-email rule. */
 export default function Login() {
   const { login, isAuthenticated, loading, authError, clearAuthError } = useAuth();
   const navigate = useNavigate();
@@ -29,8 +31,8 @@ export default function Login() {
       } else {
         navigate(destination || "/dashboard", { replace: true });
       }
-    } catch (e) {
-      setError(e.message || "Sign-in failed. Please try again.");
+    } catch (caught) {
+      setError(caught.message || "Sign-in failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -40,10 +42,7 @@ export default function Login() {
     setError("Google sign-in was cancelled or failed.");
   }, []);
 
-  // Already signed in (or just signed in): go to the app.
-  if (!loading && isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (!loading && isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
     <main className="auth-page">
@@ -52,38 +51,42 @@ export default function Login() {
         {mode === "dark" ? "Light" : "Dark"}
       </button>
       <section className="auth-card">
-        <div className="auth-brand" aria-label="Connect">
-          <span className="auth-brand__mark" aria-hidden="true"><i /><i /><i /><i /></span>
-          <span>CONNECT</span>
+        <div>
+          <div className="auth-brand" aria-label="Connect">
+            <span className="auth-brand__mark" aria-hidden="true"><i /><i /><i /><i /></span>
+            <span>CONNECT</span>
+          </div>
+          <p className="auth-eyebrow">VIT-AP COMMUNITY</p>
+          <h1>Your campus.<br />Your people.</h1>
+          <p className="auth-subtitle">
+            Meet the people who will build what comes next. One community, made for VIT-AP.
+          </p>
         </div>
-        <p className="auth-eyebrow">VIT-AP COMMUNITY</p>
-        <h1>Your campus.<br />Your people.</h1>
-        <p className="auth-subtitle">
-          Meet the people who will build what comes next. Made for the VIT-AP community.
-        </p>
-        <div className="auth-action">
-          {submitting ? (
-            <p className="auth-status">Signing you in…</p>
-          ) : (
-            <GoogleSignInButton onSuccess={handleSuccess} onError={handleError} />
-          )}
+        <div className="auth-aside">
+          <div className="auth-action">
+            <p className="form-help">Sign in with your college Google account to continue.</p>
+            {submitting ? (
+              <p className="auth-status">Signing you in…</p>
+            ) : (
+              <GoogleSignInButton onSuccess={handleSuccess} onError={handleError} />
+            )}
+            {(error || authError) && <p className="auth-error" role="alert">{error || authError}</p>}
+            <p className="auth-hint"><span aria-hidden="true">●</span> Only verified @vitapstudent.ac.in accounts can join</p>
+          </div>
+          <div className="auth-features">
+            {HIGHLIGHTS.map((item) => (
+              <div className="auth-aside__item" key={item.title}>
+                <span className="auth-aside__icon" aria-hidden="true">{item.icon}</span>
+                <div><strong>{item.title}</strong><span>{item.text}</span></div>
+              </div>
+            ))}
+          </div>
         </div>
-        {(error || authError) && <p className="auth-error" role="alert">{error || authError}</p>}
-        <p className="auth-hint"><span aria-hidden="true">●</span> Only verified @vitapstudent.ac.in accounts can join</p>
-        <p className="auth-footer">Find your next teammate. <span>·</span> Connect, collaborate, create</p>
       </section>
     </main>
   );
 }
 
 const GoogleSignInButton = memo(function GoogleSignInButton({ onSuccess, onError }) {
-  return (
-    <GoogleLogin
-      onSuccess={onSuccess}
-      onError={onError}
-      text="continue_with"
-      theme="outline"
-      shape="pill"
-    />
-  );
+  return <GoogleLogin onSuccess={onSuccess} onError={onError} text="continue_with" theme="filled_black" shape="pill" />;
 });

@@ -57,23 +57,23 @@ export default function Connections() {
       <ConnectionSection title="Requests received" count={incoming.length}>
         {incoming.length ? incoming.map((connection) => (
           <ConnectionRow key={connection.id} other={connection.other}>
-            <button className="small-button small-button--accent" type="button" onClick={() => act(() => api.post(`/connections/${connection.id}/accept`))}>Accept</button>
-            <button className="small-button" type="button" onClick={() => act(() => api.post(`/connections/${connection.id}/reject`))}>Decline</button>
+            <button className="btn btn--sm btn--primary" type="button" onClick={() => act(() => api.post(`/connections/${connection.id}/accept`))}>Accept</button>
+            <button className="btn btn--sm btn--secondary" type="button" onClick={() => act(() => api.post(`/connections/${connection.id}/reject`))}>Decline</button>
           </ConnectionRow>
         )) : <EmptyState>No incoming requests right now.</EmptyState>}
       </ConnectionSection>
       <ConnectionSection title="Requests sent" count={outgoing.length}>
         {outgoing.length ? outgoing.map((connection) => (
           <ConnectionRow key={connection.id} other={connection.other}>
-            <button className="small-button" type="button" onClick={() => act(() => api.del(`/connections/${connection.id}`))}>Cancel</button>
+            <button className="btn btn--sm btn--secondary" type="button" onClick={() => act(() => api.del(`/connections/${connection.id}`))}>Cancel</button>
           </ConnectionRow>
         )) : <EmptyState>No pending requests.</EmptyState>}
       </ConnectionSection>
       <ConnectionSection title="Your connections" count={accepted.length}>
         {accepted.length ? accepted.map((connection) => (
           <ConnectionRow key={connection.id} other={connection.other}>
-            <Link className="small-button small-button--accent" to={`/chat?with=${connection.other.id}`}>Message</Link>
-            <button className="small-button" type="button" onClick={() => act(() => api.del(`/connections/${connection.id}`))}>Remove</button>
+            <Link className="btn btn--sm btn--primary" to={`/chat?with=${connection.other.id}`}>Message</Link>
+            <button className="btn btn--sm btn--secondary" type="button" onClick={() => act(() => api.del(`/connections/${connection.id}`))}>Remove</button>
           </ConnectionRow>
         )) : <EmptyState>No connections yet. Discover someone new to get started.</EmptyState>}
       </ConnectionSection>

@@ -210,7 +210,7 @@ export default function Chat() {
         <section className="inbox-chat" aria-label="Chat messages">
           {selected ? <>
             <div className="inbox-chat__header">
-              <Avatar student={selected.other} size={42} />
+              <Avatar student={selected.other} />
               <div className="inbox-chat__identity">
                 <strong>{selected.other.name || "Student"}</strong>
                 <div className="inbox-muted">{[selected.other.branch, selected.other.batch && `Batch ${selected.other.batch}`].filter(Boolean).join(" · ")}</div>
@@ -239,8 +239,11 @@ export default function Chat() {
   );
 }
 
-function Avatar({ student, size = 44 }) {
-  return student.pictureUrl ? <img className="inbox-avatar" src={resolveMediaUrl(student.pictureUrl)} alt="" width={size} height={size} style={{ width: size, height: size }} referrerPolicy="no-referrer" />
-    : <span className="inbox-avatar inbox-avatar--empty" style={{ width: size, height: size, fontSize: size * 0.4 }}>{(student.name || "?").charAt(0)}</span>;
+function Avatar({ student, size = "md" }) {
+  return student.pictureUrl ? (
+    <img className={`inbox-avatar avatar--${size}`} src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
+  ) : (
+    <span className={`inbox-avatar inbox-avatar--empty avatar--${size}`}>{(student.name || "?").charAt(0)}</span>
+  );
 }
 

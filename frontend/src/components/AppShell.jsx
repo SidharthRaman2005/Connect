@@ -7,9 +7,9 @@ import NotificationBell from "./NotificationBell";
 const navigation = [
   { to: "/dashboard", label: "Home", icon: "⌂", end: true },
   { to: "/discover", label: "Discover", icon: "⌕" },
-  { to: "/connections", label: "Network", icon: "◌" },
+  { to: "/connections", label: "Network", icon: "◎" },
   { to: "/collabs", label: "Collabs", icon: "✦" },
-  { to: "/chat", label: "Chat", icon: "↗" },
+  { to: "/chat", label: "Chat", icon: "✉" },
   { to: "/blogs", label: "Blogs", icon: "▤" },
   { to: "/profile", label: "Profile", icon: "○" },
 ];
@@ -44,8 +44,11 @@ export default function AppShell() {
         </nav>
         <div className="app-sidebar__footer">
           <button type="button" className="app-profile-link" onClick={() => navigate("/profile")}>
-            <Avatar student={student} initials={initials} />
-            <span><strong>{student?.name || "My profile"}</strong><small>VIT-AP student</small></span>
+            <Avatar student={student} initials={initials} size="md" />
+            <span>
+              <strong title={student?.name || "My profile"}>{student?.name || "My profile"}</strong>
+              <small>VIT-AP student</small>
+            </span>
           </button>
           <button type="button" className="app-logout" onClick={handleLogout}>Sign out</button>
         </div>
@@ -65,18 +68,18 @@ export default function AppShell() {
               {mode === "dark" ? "Light" : "Dark"}
             </button>
             <NotificationBell />
-            <button type="button" className="app-topbar__avatar" onClick={() => navigate("/profile")}>
-              <Avatar student={student} initials={initials} />
+            <button type="button" className="app-topbar__avatar" aria-label="Your profile" onClick={() => navigate("/profile")}>
+              <Avatar student={student} initials={initials} size="sm" />
             </button>
           </div>
         </header>
-        <div className="app-mobile-nav">
+        <nav className="app-mobile-nav" aria-label="Mobile navigation">
           {navigation.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => isActive ? "is-active" : ""}>
               <span aria-hidden="true">{item.icon}</span>{item.label}
             </NavLink>
           ))}
-        </div>
+        </nav>
         <div className="app-content"><Outlet /></div>
       </main>
     </div>
@@ -92,10 +95,10 @@ function NavBrand() {
   );
 }
 
-function Avatar({ student, initials }) {
+function Avatar({ student, initials, size }) {
   return student?.pictureUrl ? (
-    <img className="app-avatar" src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
+    <img className={`avatar avatar--${size}`} src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
   ) : (
-    <span className="app-avatar app-avatar--fallback">{initials}</span>
+    <span className={`avatar avatar--${size}`}>{initials}</span>
   );
 }

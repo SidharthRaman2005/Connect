@@ -187,9 +187,9 @@ export default function Onboarding() {
                 <input type="radio" name="visibility" value="PUBLIC" checked={visibility === "PUBLIC"} onChange={(event) => setVisibility(event.target.value)} />
                 <span><strong>Everyone</strong><small>Any signed-in student</small></span>
               </label>
-              <label className={visibility === "CONNECTIONS_ONLY" ? "visibility-option visibility-option--active" : "visibility-option"}>
-                <input type="radio" name="visibility" value="CONNECTIONS_ONLY" checked={visibility === "CONNECTIONS_ONLY"} onChange={(event) => setVisibility(event.target.value)} />
-                <span><strong>Connections</strong><small>Only accepted connections</small></span>
+              <label className={visibility === "PRIVATE" ? "visibility-option visibility-option--active" : "visibility-option"}>
+                <input type="radio" name="visibility" value="PRIVATE" checked={visibility === "PRIVATE"} onChange={(event) => setVisibility(event.target.value)} />
+                <span><strong>Private</strong><small>Only you can view your profile</small></span>
               </label>
             </div>
           </fieldset>
