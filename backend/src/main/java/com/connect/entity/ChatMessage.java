@@ -43,6 +43,9 @@ public class ChatMessage {
     @Column(name = "read_at")
     private Instant readAt;
 
+    @Column(name = "delivered_at")
+    private Instant deliveredAt;
+
     @Column(name = "edited_at")
     private Instant editedAt;
 
@@ -69,11 +72,17 @@ public class ChatMessage {
     public String getContent() { return content; }
     public Instant getSentAt() { return sentAt; }
     public Instant getReadAt() { return readAt; }
+    public Instant getDeliveredAt() { return deliveredAt; }
     public Instant getEditedAt() { return editedAt; }
     public Instant getDeletedAt() { return deletedAt; }
     public boolean isDeleted() { return deletedAt != null; }
 
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
+
+    /** Records that the recipient's socket was open when the message arrived. */
+    public void markDelivered() {
+        if (deliveredAt == null) deliveredAt = Instant.now();
+    }
 
     /** Replaces the text and records when the edit happened. */
     public void edit(String newContent) {

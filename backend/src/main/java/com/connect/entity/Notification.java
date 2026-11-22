@@ -20,6 +20,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "notifications", indexes = {
         @Index(name = "idx_notifications_recipient_created", columnList = "recipient_id,created_at"),
+        @Index(name = "idx_notifications_recipient_activity", columnList = "recipient_id,last_activity_at"),
         @Index(name = "idx_notifications_recipient_read", columnList = "recipient_id,read_at")
 })
 public class Notification {
@@ -49,6 +50,10 @@ public class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** Bumped when a conversation receives a new message, so the inbox reorders. */
+    @Column(name = "last_activity_at")
+    private Instant lastActivityAt;
+
     @Column(name = "read_at")
     private Instant readAt;
 
@@ -66,6 +71,7 @@ public class Notification {
     @PrePersist
     void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
+        if (lastActivityAt == null) lastActivityAt = createdAt;
     }
 
     public Long getId() { return id; }
@@ -76,6 +82,8 @@ public class Notification {
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getLastActivityAt() { return lastActivityAt; }
+    public void touch() { this.lastActivityAt = Instant.now(); }
     public Instant getReadAt() { return readAt; }
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
 }

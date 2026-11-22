@@ -2,6 +2,7 @@ package com.connect.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,6 +46,21 @@ public class NotificationController {
     @PostMapping("/read-all")
     public ResponseEntity<Void> markAllRead(@AuthenticationPrincipal AuthenticatedStudent principal) {
         notificationService.markAllRead(principal.id());
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Deletes a notification after the recipient has seen/marked it as read. */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal AuthenticatedStudent principal,
+                                       @PathVariable Long id) {
+        notificationService.deleteNotification(principal.id(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Clears all notifications after "Mark all read". */
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAll(@AuthenticationPrincipal AuthenticatedStudent principal) {
+        notificationService.deleteAllForRecipient(principal.id());
         return ResponseEntity.noContent().build();
     }
 }

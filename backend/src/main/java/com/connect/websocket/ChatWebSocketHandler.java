@@ -16,7 +16,7 @@ import com.connect.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Chat socket protocol. Clients send {@code {type, recipientId, content}};
+ * Chat socket protocol. Clients send {@code {type, recipientId, content, clientId}};
  * the server pushes typed {@link ChatEventDto} envelopes:
  * message / delivered / read / error.
  */
@@ -35,6 +35,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         Long studentId = (Long) session.getAttributes().get("studentId");
         sessions.computeIfAbsent(studentId, ignored -> ConcurrentHashMap.newKeySet()).add(session);
+
+        // Messages that arrived while offline become delivered now, and their
+        // senders are told so their UI can move from "Sent" to "Delivered".
+        for (ChatMessageDto message : chatService.markDeliveredOnConnect(studentId)) {
+            sendToStudent(message.senderId(), ChatEventDto.delivered(message.id()));
+        }
     }
 
     @Override
@@ -51,13 +57,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 sendToStudent(request.recipientId(), ChatEventDto.read(me));
                 return;
             }
-            ChatMessageDto message = chatService.send(me, request.recipientId(), request.content());
-            ChatEventDto event = ChatEventDto.message(message);
+            boolean recipientOnline = isOnline(request.recipientId());
+            ChatMessageDto message = chatService.send(me, request.recipientId(), request.content(), recipientOnline);
+            ChatEventDto event = ChatEventDto.message(message, request.clientId());
             sendToStudent(me, event);
             sendToStudent(request.recipientId(), event);
-            if (isOnline(request.recipientId())) {
-                sendToStudent(me, ChatEventDto.delivered(message.id()));
-            }
         } catch (Exception exception) {
             sendError(session, exception.getMessage() == null ? "Message could not be sent." : exception.getMessage());
         }

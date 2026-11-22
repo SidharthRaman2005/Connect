@@ -87,6 +87,7 @@ export default function Chat() {
       }
       setConversations((items) => items.map((item) =>
         item.other.id === otherId ? { ...item, unreadCount: 0 } : item));
+      window.dispatchEvent(new Event("connect:chat-unread"));
     } catch {
       // Reading is best-effort; the UI should never break because of it.
     }
@@ -207,10 +208,12 @@ export default function Chat() {
             const belongs = selectedIdRef.current &&
               (message.senderId === selectedIdRef.current || message.recipientId === selectedIdRef.current);
             if (!belongs) return previous;
-            const tempIndex = previous.findIndex((item) =>
-              typeof item.id === "string" && item.id.startsWith("tmp-") &&
-              item.senderId === message.senderId && item.recipientId === message.recipientId &&
-              item.content === message.content);
+            const tempIndex = incoming.clientId
+              ? previous.findIndex((item) => item.clientId === incoming.clientId)
+              : previous.findIndex((item) =>
+                  typeof item.id === "string" && item.id.startsWith("tmp-") &&
+                  item.senderId === message.senderId && item.recipientId === message.recipientId &&
+                  item.content === message.content);
             if (tempIndex >= 0) {
               const copy = [...previous];
               copy[tempIndex] = message;
@@ -218,6 +221,7 @@ export default function Chat() {
             }
             return previous.some((item) => item.id === message.id) ? previous : [...previous, message];
           });
+          window.dispatchEvent(new Event("connect:chat-unread"));
           if (message.senderId === selectedIdRef.current) {
             void markConversationRead(selectedIdRef.current);
           }
@@ -258,18 +262,21 @@ export default function Chat() {
     const content = draft.trim();
     const socket = socketRef.current;
     if (!selectedId || !content || socket?.readyState !== WebSocket.OPEN) return;
+    const clientId = `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const optimistic = {
       id: `tmp-${Date.now()}`,
+      clientId,
       senderId: me?.id,
       recipientId: selectedId,
       content,
       sentAt: new Date().toISOString(),
       editedAt: null,
       deleted: false,
+      delivered: false,
       read: false,
     };
     setMessages((previous) => [...previous, optimistic]);
-    socket.send(JSON.stringify({ recipientId: selectedId, content }));
+    socket.send(JSON.stringify({ recipientId: selectedId, content, clientId }));
     setDraft("");
   };
 
@@ -489,7 +496,7 @@ export default function Chat() {
                         {mine && (
                           <span className="inbox-message-meta">
                             {message.deleted ? "Unsent" : message.read ? "Seen"
-                              : deliveredIds.has(message.id) ? "Delivered"
+                              : (message.delivered || deliveredIds.has(message.id)) ? "Delivered"
                               : typeof message.id === "string" ? "Sending…" : "Sent"}
                             {message.editedAt && !message.deleted ? " · edited" : ""}
                           </span>

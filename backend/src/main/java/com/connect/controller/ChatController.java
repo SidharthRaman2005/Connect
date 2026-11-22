@@ -44,6 +44,12 @@ public class ChatController {
         this.chatWebSocketHandler = chatWebSocketHandler;
     }
 
+    /** Total unread messages, used for the small dot on the Chat navigation item. */
+    @GetMapping("/unread")
+    public long unread(@AuthenticationPrincipal AuthenticatedStudent principal) {
+        return chatService.unreadCount(principal.id());
+    }
+
     @GetMapping("/conversations")
     public List<ChatConversationDto> conversations(
             @AuthenticationPrincipal AuthenticatedStudent principal,

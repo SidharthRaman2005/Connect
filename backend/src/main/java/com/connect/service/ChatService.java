@@ -51,7 +51,7 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatMessageDto send(Long senderId, Long recipientId, String rawContent) {
+    public ChatMessageDto send(Long senderId, Long recipientId, String rawContent, boolean recipientOnline) {
         if (recipientId == null || senderId.equals(recipientId)) {
             throw new BadRequestException("Choose another student to message.");
         }
@@ -59,14 +59,31 @@ public class ChatService {
         Student sender = load(senderId);
         Student recipient = load(recipientId);
         requireConnected(senderId, recipientId);
-        ChatMessage saved = messageRepository.save(new ChatMessage(sender, recipient, content));
+        ChatMessage message = new ChatMessage(sender, recipient, content);
+        if (recipientOnline) message.markDelivered();
+        ChatMessage saved = messageRepository.save(message);
 
-        Instant after = clearedAt(recipientId, senderId);
-        long unread = after == null
-                ? messageRepository.countBySenderIdAndRecipientIdAndReadAtIsNull(senderId, recipientId)
-                : messageRepository.countUnreadAfter(senderId, recipientId, after);
-        notificationService.recordMessage(recipient, sender, unread);
+        // Offline recipients get one plain notification. Online recipients only
+        // get the unread dot in the chat navigation, driven by /chat/unread.
+        if (!recipientOnline) notificationService.recordMessage(recipient, sender);
         return ChatMessageDto.from(saved);
+    }
+
+    /** Marks pending messages as delivered when their recipient reconnects. */
+    @Transactional
+    public List<ChatMessageDto> markDeliveredOnConnect(Long studentId) {
+        List<ChatMessage> pending = messageRepository
+                .findByRecipientIdAndDeliveredAtIsNullAndReadAtIsNull(studentId);
+        if (pending.isEmpty()) return List.of();
+        return pending.stream().map(message -> {
+            message.markDelivered();
+            return ChatMessageDto.from(messageRepository.save(message));
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long unreadCount(Long studentId) {
+        return messageRepository.countByRecipientIdAndReadAtIsNull(studentId);
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +103,7 @@ public class ChatService {
     @Transactional
     public ChatMessageDto editMessage(Long meId, Long messageId, String rawContent) {
         ChatMessage message = ownMessage(meId, messageId);
+        requireConnected(meId, otherParty(message, meId));
         if (message.isDeleted()) throw new BadRequestException("This message was unsent and cannot be edited.");
         message.edit(clean(rawContent));
         return ChatMessageDto.from(messageRepository.save(message));
@@ -95,6 +113,7 @@ public class ChatService {
     @Transactional
     public ChatMessageDto unsendMessage(Long meId, Long messageId) {
         ChatMessage message = ownMessage(meId, messageId);
+        requireConnected(meId, otherParty(message, meId));
         if (message.isDeleted()) throw new BadRequestException("This message was already unsent.");
         message.unsend();
         return ChatMessageDto.from(messageRepository.save(message));
@@ -170,6 +189,11 @@ public class ChatService {
         ChatMessage message = messageRepository.findByIdAndSenderId(messageId, meId)
                 .orElseThrow(() -> new ForbiddenException("You can only modify your own messages."));
         return message;
+    }
+
+    private Long otherParty(ChatMessage message, Long meId) {
+        return message.getSender().getId().equals(meId)
+                ? message.getRecipient().getId() : message.getSender().getId();
     }
 
     private String clean(String raw) {

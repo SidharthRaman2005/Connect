@@ -38,6 +38,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     Optional<ChatMessage> findByIdAndSenderId(Long id, Long senderId);
 
+    /** Messages that arrived while the recipient was offline and are still undelivered. */
+    List<ChatMessage> findByRecipientIdAndDeliveredAtIsNullAndReadAtIsNull(Long recipientId);
+
+    long countByRecipientIdAndReadAtIsNull(Long recipientId);
+
     long countBySenderIdAndRecipientIdAndReadAtIsNull(Long senderId, Long recipientId);
 
     @Query("""

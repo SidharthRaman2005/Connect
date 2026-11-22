@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.connect.dto.PageResponse;
 import com.connect.dto.StudentCardDto;
+import com.connect.exception.BadRequestException;
 import com.connect.security.AuthenticatedStudent;
 import com.connect.service.DiscoveryService;
 
@@ -19,6 +20,7 @@ import com.connect.service.DiscoveryService;
  */
 @RestController
 public class DiscoveryController {
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final DiscoveryService discoveryService;
 
@@ -42,6 +44,9 @@ public class DiscoveryController {
             @RequestParam(required = false) List<Long> tagIds,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
+            throw new BadRequestException("Page must be non-negative and size must be 1 to 100.");
+        }
         return discoveryService.search(principal.id(), q, branch, batch, tagIds, page, size);
     }
 }

@@ -14,7 +14,12 @@ import com.connect.entity.Notification;
 import com.connect.entity.NotificationType;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    Page<Notification> findByRecipientIdOrderByCreatedAtDescIdDesc(Long recipientId, Pageable pageable);
+    @Query("""
+            select n from Notification n
+            where n.recipient.id = :recipientId
+            order by coalesce(n.lastActivityAt, n.createdAt) desc, n.id desc
+            """)
+    Page<Notification> findInbox(@Param("recipientId") Long recipientId, Pageable pageable);
 
     Optional<Notification> findByIdAndRecipientId(Long id, Long recipientId);
 
@@ -22,6 +27,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             Long recipientId, Long actorId, NotificationType type);
 
     long countByRecipientIdAndReadAtIsNull(Long recipientId);
+
+    void deleteByRecipientId(Long recipientId);
 
     @Modifying
     @Query("update Notification n set n.readAt = :readAt where n.recipient.id = :recipientId and n.readAt is null")

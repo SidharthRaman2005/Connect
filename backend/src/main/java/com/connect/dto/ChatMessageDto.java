@@ -13,6 +13,7 @@ public record ChatMessageDto(
         Instant sentAt,
         Instant editedAt,
         boolean deleted,
+        boolean delivered,
         boolean read) {
 
     public static ChatMessageDto from(ChatMessage message) {
@@ -24,6 +25,7 @@ public record ChatMessageDto(
                 message.getSentAt(),
                 message.getEditedAt(),
                 message.isDeleted(),
+                message.getDeliveredAt() != null,
                 message.getReadAt() != null);
     }
 }

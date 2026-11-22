@@ -4,7 +4,8 @@ package com.connect.dto;
 public record WsChatRequest(
         String type,
         Long recipientId,
-        String content) {
+        String content,
+        String clientId) {
 
     public boolean isRead() {
         return "read".equalsIgnoreCase(type);

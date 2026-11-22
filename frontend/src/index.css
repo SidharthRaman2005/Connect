@@ -439,3 +439,9 @@ img { display: block; max-width: 100%; }
 .modal__title { margin-bottom: 10px; font-size: 21px; }
 .modal__description { margin-bottom: 26px; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.error-boundary { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: var(--bg); }
+.error-boundary__card { display: grid; justify-items: center; gap: 14px; max-width: 420px; padding: 40px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+.error-boundary__icon { display: grid; width: 52px; height: 52px; place-items: center; border-radius: 50%; background: var(--danger-soft); color: var(--danger); font-size: 24px; font-weight: 800; }
+.error-boundary__card h1 { margin: 0; font-size: 24px; }
+.error-boundary__card p { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.6; }

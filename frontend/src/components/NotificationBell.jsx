@@ -39,22 +39,24 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  // Once a notification is seen/read it is deleted, so the inbox stays small.
   const markRead = async (notification) => {
-    if (notification.readAt) return;
-    await api.post(`/notifications/${notification.id}/read`);
-    setNotifications((items) => items.map((item) => item.id === notification.id
-      ? { ...item, readAt: new Date().toISOString() } : item));
-    setUnreadCount((count) => Math.max(0, count - 1));
+    try {
+      await api.del(`/notifications/${notification.id}`);
+      setNotifications((items) => items.filter((item) => item.id !== notification.id));
+      if (!notification.readAt) setUnreadCount((count) => Math.max(0, count - 1));
+    } catch (e) {
+      setError(e.message || "Could not clear the notification.");
+    }
   };
 
   const markAllRead = async () => {
     try {
-      await api.post("/notifications/read-all");
-      const readAt = new Date().toISOString();
-      setNotifications((items) => items.map((item) => ({ ...item, readAt: item.readAt || readAt })));
+      await api.del("/notifications/all");
+      setNotifications([]);
       setUnreadCount(0);
     } catch (e) {
-      setError(e.message || "Could not mark notifications as read.");
+      setError(e.message || "Could not clear notifications.");
     }
   };
 

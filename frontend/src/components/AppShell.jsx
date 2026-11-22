@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeProvider";
-import { resolveMediaUrl } from "../lib/api";
+import { api, resolveMediaUrl } from "../lib/api";
 import NotificationBell from "./NotificationBell";
 
 const navigation = [
@@ -19,6 +20,26 @@ export default function AppShell() {
   const { mode, toggle } = useTheme();
   const navigate = useNavigate();
   const initials = (student?.name || "S").charAt(0).toUpperCase();
+  const displayName = stripRegistrationNumber(student?.name || "My profile");
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const loadUnread = () => {
+      api.get("/chat/unread")
+        .then((count) => active && setUnreadMessages(Number(count) || 0))
+        .catch(() => {});
+    };
+    loadUnread();
+    const poll = setInterval(loadUnread, 20000);
+    const onChatActivity = () => loadUnread();
+    window.addEventListener("connect:chat-unread", onChatActivity);
+    return () => {
+      active = false;
+      clearInterval(poll);
+      window.removeEventListener("connect:chat-unread", onChatActivity);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -39,6 +60,9 @@ export default function AppShell() {
             >
               <span aria-hidden="true">{item.icon}</span>
               {item.label}
+              {item.to === "/chat" && unreadMessages > 0 && (
+                <span className="app-nav__dot" title={`${unreadMessages} unread messages`} aria-label={`${unreadMessages} unread messages`} />
+              )}
             </NavLink>
           ))}
         </nav>
@@ -46,7 +70,7 @@ export default function AppShell() {
           <button type="button" className="app-profile-link" onClick={() => navigate("/profile")}>
             <Avatar student={student} initials={initials} size="md" />
             <span>
-              <strong title={student?.name || "My profile"}>{student?.name || "My profile"}</strong>
+              <strong title={displayName}>{displayName}</strong>
               <small>VIT-AP student</small>
             </span>
           </button>
@@ -77,6 +101,7 @@ export default function AppShell() {
           {navigation.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => isActive ? "is-active" : ""}>
               <span aria-hidden="true">{item.icon}</span>{item.label}
+              {item.to === "/chat" && unreadMessages > 0 && <span className="app-mobile-nav__dot" aria-hidden="true" />}
             </NavLink>
           ))}
         </nav>
@@ -84,6 +109,11 @@ export default function AppShell() {
       </main>
     </div>
   );
+}
+
+/** Removes a trailing roll/registration number (e.g. "23MIC7142") from a name. */
+function stripRegistrationNumber(name) {
+  return name.replace(/\s+\d{2}[A-Z]{2,4}\d{3,}\s*$/i, "");
 }
 
 function NavBrand() {

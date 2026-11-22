@@ -32,20 +32,20 @@ public class NotificationService {
     }
 
     /**
-     * One aggregated message notification per unread conversation instead of one
-     * notification per message. Repeated messages simply update the count.
+     * One plain notification per unread conversation — no message text and no
+     * message count. A new message just bumps the activity time so the entry
+     * moves back to the top of the inbox.
      */
     @Transactional
-    public void recordMessage(Student recipient, Student actor, long unreadCount) {
-        String text = unreadCount == 1
-                ? actor.getName() + " sent you a message."
-                : actor.getName() + " sent you " + unreadCount + " new messages.";
+    public void recordMessage(Student recipient, Student actor) {
+        String text = actor.getName() + " sent you a message.";
         Optional<Notification> existing = notificationRepository
                 .findFirstByRecipientIdAndActorIdAndTypeAndReadAtIsNull(
                         recipient.getId(), actor.getId(), NotificationType.MESSAGE);
         if (existing.isPresent()) {
             Notification notification = existing.get();
             notification.setMessage(text);
+            notification.touch();
             notificationRepository.save(notification);
         } else {
             notificationRepository.save(new Notification(
@@ -67,7 +67,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public NotificationInboxDto inbox(Long studentId, int page, int size) {
         Page<Notification> result = notificationRepository
-                .findByRecipientIdOrderByCreatedAtDescIdDesc(studentId, PageRequest.of(page, size));
+                .findInbox(studentId, PageRequest.of(page, size));
         List<NotificationDto> content = result.getContent().stream().map(NotificationDto::from).toList();
         long unreadCount = notificationRepository.countByRecipientIdAndReadAtIsNull(studentId);
         return new NotificationInboxDto(content, result.getNumber(), result.getSize(),
@@ -87,5 +87,19 @@ public class NotificationService {
     @Transactional
     public void markAllRead(Long studentId) {
         notificationRepository.markAllRead(studentId, Instant.now());
+    }
+
+    /** Removes a notification the recipient has just seen/read. */
+    @Transactional
+    public void deleteNotification(Long studentId, Long notificationId) {
+        Notification notification = notificationRepository.findByIdAndRecipientId(notificationId, studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found."));
+        notificationRepository.delete(notification);
+    }
+
+    /** Clears the whole inbox after the recipient marks everything as read. */
+    @Transactional
+    public void deleteAllForRecipient(Long studentId) {
+        notificationRepository.deleteByRecipientId(studentId);
     }
 }

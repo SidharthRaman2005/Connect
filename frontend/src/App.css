@@ -22,6 +22,9 @@
 .app-nav { display: grid; gap: 5px; margin-top: 52px; }
 .app-nav__item { display: flex; align-items: center; gap: 14px; border-radius: var(--radius-sm); padding: 12px 14px; color: var(--muted); font-size: 14px; font-weight: 700; transition: background 0.15s ease, color 0.15s ease; }
 .app-nav__item > span { display: grid; width: 20px; place-items: center; font-size: 18px; line-height: 1; }
+.app-nav__dot { display: block; flex: 0 0 8px; width: 8px; height: 8px; min-width: 8px; aspect-ratio: 1 / 1; margin-left: auto; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.app-nav__item--active .app-nav__dot { background: var(--accent-contrast); box-shadow: 0 0 0 3px rgb(20 32 10 / 18%); }
+.app-mobile-nav__dot { flex: 0 0 6px; width: 6px; height: 6px; min-width: 6px; aspect-ratio: 1 / 1; border-radius: 50%; background: var(--accent); }
 .app-nav__item:hover { background: var(--surface-hover); color: var(--text); }
 .app-nav__item--active, .app-nav__item--active:hover { background: var(--accent); color: var(--accent-contrast); }
 
