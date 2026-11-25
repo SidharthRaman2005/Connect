@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Dashboard() {
@@ -16,7 +16,7 @@ export default function Dashboard() {
     Promise.all([api.get("/discover"), api.get("/collabs")])
       .then(([discover, opportunities]) => {
         if (!active) return;
-        setPeople((discover || []).slice(0, 3));
+        setPeople((discover?.content || []).slice(0, 3));
         setCollabs((opportunities || []).slice(0, 3));
       })
       .catch((requestError) => {
@@ -81,7 +81,7 @@ function PersonRow({ person, onClick }) {
   const meta = [person.branch || "VIT-AP", person.batch && `Batch ${person.batch}`].filter(Boolean).join(" · ");
   return (
     <button type="button" className="dashboard-row" onClick={onClick}>
-      {person.pictureUrl ? <img src={resolveMediaUrl(person.pictureUrl)} alt="" referrerPolicy="no-referrer" /> : <span className="dashboard-row__avatar">{(person.name || "?").charAt(0)}</span>}
+      {hasLocalMedia(person.pictureUrl) ? <img src={resolveMediaUrl(person.pictureUrl)} alt="" /> : <span className="dashboard-row__avatar">{(person.name || "?").charAt(0)}</span>}
       <span className="dashboard-row__content"><strong>{person.name}</strong><small>{meta}</small></span>
       {person.sharedTagCount > 0 && <span className="dashboard-row__match">{person.sharedTagCount} shared</span>}
       <span className="dashboard-row__arrow" aria-hidden="true">→</span>

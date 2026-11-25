@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 
 export default function Connections() {
   const [incoming, setIncoming] = useState([]);
@@ -93,7 +93,7 @@ function ConnectionSection({ title, count, children }) {
 function ConnectionRow({ other, children }) {
   return (
     <div className="connection-row">
-      {other.pictureUrl ? <img src={resolveMediaUrl(other.pictureUrl)} alt="" referrerPolicy="no-referrer" /> : <span className="connection-row__avatar">{(other.name || "?").charAt(0)}</span>}
+      {hasLocalMedia(other.pictureUrl) ? <img src={resolveMediaUrl(other.pictureUrl)} alt="" /> : <span className="connection-row__avatar">{(other.name || "?").charAt(0)}</span>}
       <div className="connection-row__info">
         <Link to={`/students/${other.id}`}>{other.name || "Student"}</Link>
         <small>{[other.branch, other.batch && `Batch ${other.batch}`].filter(Boolean).join(" · ") || "VIT-AP student"}</small>

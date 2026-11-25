@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { api, chatSocketUrl, resolveMediaUrl } from "../lib/api";
+import { api, chatSocketUrl, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/ToastProvider";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -536,7 +536,7 @@ export default function Chat() {
 }
 
 function Avatar({ student }) {
-  return student.pictureUrl ? (
+  return hasLocalMedia(student.pictureUrl) ? (
     <img className="inbox-avatar avatar--md" src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
   ) : (
     <span className="inbox-avatar inbox-avatar--empty avatar--md">{(student.name || "?").charAt(0)}</span>

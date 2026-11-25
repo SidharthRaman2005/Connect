@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,14 +22,17 @@ import com.connect.repository.NotificationRepository;
 @Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher events;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, ApplicationEventPublisher events) {
         this.notificationRepository = notificationRepository;
+        this.events = events;
     }
 
     public void create(Student recipient, Student actor, NotificationType type,
                        Long referenceId, String message) {
-        notificationRepository.save(new Notification(recipient, actor, type, referenceId, message));
+        Notification saved = notificationRepository.save(new Notification(recipient, actor, type, referenceId, message));
+        publishCreated(saved);
     }
 
     /**
@@ -46,10 +50,10 @@ public class NotificationService {
             Notification notification = existing.get();
             notification.setMessage(text);
             notification.touch();
-            notificationRepository.save(notification);
+            publishCreated(notificationRepository.save(notification));
         } else {
-            notificationRepository.save(new Notification(
-                    recipient, actor, NotificationType.MESSAGE, actor.getId(), text));
+            publishCreated(notificationRepository.save(new Notification(
+                    recipient, actor, NotificationType.MESSAGE, actor.getId(), text)));
         }
     }
 
@@ -61,6 +65,7 @@ public class NotificationService {
                 .ifPresent(notification -> {
                     notification.setReadAt(Instant.now());
                     notificationRepository.save(notification);
+                    publishChanged(recipientId);
                 });
     }
 
@@ -81,12 +86,14 @@ public class NotificationService {
         if (notification.getReadAt() == null) {
             notification.setReadAt(Instant.now());
             notificationRepository.save(notification);
+            publishChanged(studentId);
         }
     }
 
     @Transactional
     public void markAllRead(Long studentId) {
         notificationRepository.markAllRead(studentId, Instant.now());
+        publishChanged(studentId);
     }
 
     /** Removes a notification the recipient has just seen/read. */
@@ -95,11 +102,23 @@ public class NotificationService {
         Notification notification = notificationRepository.findByIdAndRecipientId(notificationId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found."));
         notificationRepository.delete(notification);
+        publishChanged(studentId);
     }
 
     /** Clears the whole inbox after the recipient marks everything as read. */
     @Transactional
     public void deleteAllForRecipient(Long studentId) {
         notificationRepository.deleteByRecipientId(studentId);
+        publishChanged(studentId);
+    }
+
+    private void publishCreated(Notification notification) {
+        events.publishEvent(new NotificationRealtimeEvent(notification.getRecipient().getId(),
+                com.connect.dto.NotificationSocketEvent.created(NotificationDto.from(notification))));
+    }
+
+    private void publishChanged(Long recipientId) {
+        events.publishEvent(new NotificationRealtimeEvent(recipientId,
+                com.connect.dto.NotificationSocketEvent.changed()));
     }
 }

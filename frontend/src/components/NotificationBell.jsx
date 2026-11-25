@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
-
-const POLL_MS = 30000;
+import { api, chatSocketUrl, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 
 /** Persisted event inbox for connection, collaboration, and message activity. */
 export default function NotificationBell() {
@@ -25,9 +23,51 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    const initial = setTimeout(load, 0);
-    const poll = setInterval(load, POLL_MS);
-    return () => { clearTimeout(initial); clearInterval(poll); };
+    let stopped = false;
+    let socket;
+    let retryTimer;
+    let attempts = 0;
+
+    const reconnect = () => {
+      if (stopped) return;
+      const delay = Math.min(1000 * (2 ** attempts), 30000);
+      attempts += 1;
+      retryTimer = setTimeout(connect, delay);
+    };
+
+    const connect = async () => {
+      try {
+        const { ticket } = await api.post("/chat/socket-ticket");
+        if (stopped) return;
+        socket = new WebSocket(chatSocketUrl(ticket));
+        socket.onopen = () => {
+          attempts = 0;
+          load();
+          window.dispatchEvent(new Event("connect:chat-unread"));
+        };
+        socket.onmessage = (event) => {
+          let message;
+          try { message = JSON.parse(event.data); } catch { return; }
+          if (message.type === "notification" || message.type === "notification_changed") load();
+          if (["message", "read", "delivered"].includes(message.type)) {
+            window.dispatchEvent(new Event("connect:chat-unread"));
+          }
+        };
+        socket.onerror = () => socket.close();
+        socket.onclose = reconnect;
+      } catch {
+        reconnect();
+      }
+    };
+
+    const initialLoad = setTimeout(load, 0);
+    connect();
+    return () => {
+      stopped = true;
+      clearTimeout(initialLoad);
+      clearTimeout(retryTimer);
+      socket?.close();
+    };
   }, [load]);
 
   useEffect(() => {
@@ -99,7 +139,7 @@ export default function NotificationBell() {
             const isConnectionRequest = notification.type === "CONNECTION_REQUEST";
             return (
               <div key={notification.id} className={`notification-item${notification.readAt ? "" : " is-unread"}`}>
-                {actor?.pictureUrl ? <img src={resolveMediaUrl(actor.pictureUrl)} alt="" width={38} height={38} className="notification-avatar" referrerPolicy="no-referrer" />
+                {hasLocalMedia(actor?.pictureUrl) ? <img src={resolveMediaUrl(actor.pictureUrl)} alt="" width={38} height={38} className="notification-avatar" />
                   : <div className="notification-avatar notification-avatar--empty">{(actor?.name || "•").charAt(0)}</div>}
                 <div className="notification-item__body">
                   <Link to={href} onClick={() => { markRead(notification).catch(() => {}); setOpen(false); }} className="notification-message">

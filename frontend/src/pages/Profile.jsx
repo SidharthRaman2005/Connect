@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/ToastProvider";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -165,7 +165,7 @@ export default function Profile() {
       </header>
 
       <section className="profile-identity">
-        {pictureUrl ? (
+        {hasLocalMedia(pictureUrl) ? (
           <img
             className="avatar avatar--lg"
             src={resolveMediaUrl(pictureUrl)}
@@ -183,7 +183,7 @@ export default function Profile() {
               {uploadingPhoto ? "Uploading…" : pictureUrl ? "Change photo" : "Upload photo"}
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
+                accept="image/png,image/jpeg,image/gif"
                 onChange={handlePhotoChange}
                 disabled={uploadingPhoto}
                 hidden
@@ -195,7 +195,7 @@ export default function Profile() {
               </button>
             )}
           </div>
-          <span className="profile-identity__hint">PNG, JPEG, WebP or GIF — up to 2 MB. Changes apply immediately.</span>
+          <span className="profile-identity__hint">PNG, JPEG or GIF — up to 2 MB. Changes apply immediately.</span>
           {photoError && <span className="profile-identity__error" role="alert">{photoError}</span>}
         </div>
       </section>

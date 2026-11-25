@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/ToastProvider";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -204,7 +204,7 @@ function BlogCard({ post, isOwner, onEdit, onDelete }) {
   return (
     <article className="blog-card">
       <div className="blog-card__author">
-        {author.pictureUrl ? <img src={resolveMediaUrl(author.pictureUrl)} alt="" referrerPolicy="no-referrer" /> : <span className="blog-card__avatar">{(author.name || "?").charAt(0)}</span>}
+        {hasLocalMedia(author.pictureUrl) ? <img src={resolveMediaUrl(author.pictureUrl)} alt="" /> : <span className="blog-card__avatar">{(author.name || "?").charAt(0)}</span>}
         <div className="blog-card__author-name">
           <Link to={`/students/${author.id}`}><strong>{author.name || "Student"}</strong></Link>
           <small>{[author.branch, author.batch && `Batch ${author.batch}`].filter(Boolean).join(" · ") || date}</small>

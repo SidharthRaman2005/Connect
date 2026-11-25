@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 
 const TYPE_OPTIONS = [
   { value: "PROJECT", label: "Project" }, { value: "HACKATHON", label: "Hackathon" },
@@ -97,5 +97,5 @@ function ManagedCollab({ post, onAccept, onClose }) {
 }
 
 function Applicant({ applicant, children }) {
-  return <div className="applicant-row">{applicant.pictureUrl ? <img src={resolveMediaUrl(applicant.pictureUrl)} alt="" referrerPolicy="no-referrer" /> : <span>{(applicant.name || "?").charAt(0)}</span>}<div><Link to={`/students/${applicant.id}`}>{applicant.name || "Student"}</Link><small>{[applicant.branch, applicant.batch && `Batch ${applicant.batch}`].filter(Boolean).join(" · ")}</small></div><div className="applicant-row__action">{children}</div></div>;
+  return <div className="applicant-row">{hasLocalMedia(applicant.pictureUrl) ? <img src={resolveMediaUrl(applicant.pictureUrl)} alt="" /> : <span>{(applicant.name || "?").charAt(0)}</span>}<div><Link to={`/students/${applicant.id}`}>{applicant.name || "Student"}</Link><small>{[applicant.branch, applicant.batch && `Batch ${applicant.batch}`].filter(Boolean).join(" · ")}</small></div><div className="applicant-row__action">{children}</div></div>;
 }

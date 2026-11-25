@@ -30,8 +30,11 @@ public class DiscoveryController {
 
     /** Suggested students, ranked by shared tags. */
     @GetMapping("/api/discover")
-    public List<StudentCardDto> discover(@AuthenticationPrincipal AuthenticatedStudent principal) {
-        return discoveryService.discover(principal.id());
+    public PageResponse<StudentCardDto> discover(@AuthenticationPrincipal AuthenticatedStudent principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        validatePage(page, size);
+        return discoveryService.discover(principal.id(), page, size);
     }
 
     /** Filtered, paginated people search. All filters are optional. */
@@ -44,9 +47,13 @@ public class DiscoveryController {
             @RequestParam(required = false) List<Long> tagIds,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        validatePage(page, size);
+        return discoveryService.search(principal.id(), q, branch, batch, tagIds, page, size);
+    }
+
+    private static void validatePage(int page, int size) {
         if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page must be non-negative and size must be 1 to 100.");
         }
-        return discoveryService.search(principal.id(), q, branch, batch, tagIds, page, size);
     }
 }

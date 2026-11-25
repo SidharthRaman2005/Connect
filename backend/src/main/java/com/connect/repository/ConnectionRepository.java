@@ -2,6 +2,7 @@ package com.connect.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -47,4 +48,13 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
               and (c.requester.id = :id or c.addressee.id = :id)
             """)
     List<Connection> findActiveForStudent(@Param("id") Long studentId);
+
+    @Query("""
+            select c from Connection c
+            where c.status <> com.connect.entity.ConnectionStatus.REJECTED
+              and ((c.requester.id = :id and c.addressee.id in :others)
+                or (c.addressee.id = :id and c.requester.id in :others))
+            """)
+    List<Connection> findActiveForStudentAndOthers(@Param("id") Long studentId,
+                                                   @Param("others") Collection<Long> otherIds);
 }

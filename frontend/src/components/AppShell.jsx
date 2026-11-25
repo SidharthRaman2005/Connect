@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTheme } from "../theme/ThemeProvider";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import NotificationBell from "./NotificationBell";
 
 const navigation = [
@@ -31,12 +31,10 @@ export default function AppShell() {
         .catch(() => {});
     };
     loadUnread();
-    const poll = setInterval(loadUnread, 20000);
     const onChatActivity = () => loadUnread();
     window.addEventListener("connect:chat-unread", onChatActivity);
     return () => {
       active = false;
-      clearInterval(poll);
       window.removeEventListener("connect:chat-unread", onChatActivity);
     };
   }, []);
@@ -126,7 +124,7 @@ function NavBrand() {
 }
 
 function Avatar({ student, initials, size }) {
-  return student?.pictureUrl ? (
+  return hasLocalMedia(student?.pictureUrl) ? (
     <img className={`avatar avatar--${size}`} src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
   ) : (
     <span className={`avatar avatar--${size}`}>{initials}</span>

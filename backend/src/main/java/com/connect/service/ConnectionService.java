@@ -3,6 +3,7 @@ package com.connect.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -146,6 +147,18 @@ public class ConnectionService {
             boolean iAmRequester = c.getRequester().getId().equals(meId);
             Long otherId = iAmRequester ? c.getAddressee().getId() : c.getRequester().getId();
             relations.put(otherId, relationOf(c, iAmRequester));
+        }
+        return relations;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, RelationState> relationsFor(Long meId, Collection<Long> otherIds) {
+        if (otherIds == null || otherIds.isEmpty()) return Map.of();
+        Map<Long, RelationState> relations = new HashMap<>();
+        for (Connection connection : connectionRepository.findActiveForStudentAndOthers(meId, otherIds)) {
+            boolean iAmRequester = connection.getRequester().getId().equals(meId);
+            Long otherId = iAmRequester ? connection.getAddressee().getId() : connection.getRequester().getId();
+            relations.put(otherId, relationOf(connection, iAmRequester));
         }
         return relations;
     }

@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,6 +15,7 @@ import com.connect.dto.ChatEventDto;
 import com.connect.dto.ChatMessageDto;
 import com.connect.dto.WsChatRequest;
 import com.connect.service.ChatService;
+import com.connect.service.NotificationRealtimeEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -74,6 +77,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         sendToStudent(message.recipientId(), event);
     }
 
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void broadcastNotification(NotificationRealtimeEvent event) {
+        sendToStudent(event.recipientId(), event.payload());
+    }
+
     public boolean isOnline(Long studentId) {
         Set<WebSocketSession> studentSessions = sessions.get(studentId);
         return studentSessions != null && studentSessions.stream().anyMatch(WebSocketSession::isOpen);
@@ -89,7 +97,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void sendToStudent(Long studentId, ChatEventDto event) {
+    private void sendToStudent(Long studentId, Object event) {
         Set<WebSocketSession> studentSessions = sessions.get(studentId);
         if (studentSessions == null) return;
         studentSessions.forEach(session -> send(session, event));

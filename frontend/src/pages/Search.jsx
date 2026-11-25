@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 
 const PAGE_SIZE = 12;
 
@@ -189,12 +189,11 @@ export default function Search() {
 
 function SearchResult({ student, busy, onConnect }) {
   const meta = [student.branch, student.batch && `Batch ${student.batch}`].filter(Boolean).join(" · ");
-  const fallback = `https://i.pravatar.cc/120?img=${((Number(student.id) || 1) % 70) + 1}`;
-  const picture = student.pictureUrl ? resolveMediaUrl(student.pictureUrl) : fallback;
   return (
     <article className="search-result">
       <Link className="search-result__profile" to={`/students/${student.id}`}>
-        <img src={picture} alt={student.name || "Student"} referrerPolicy="no-referrer" />
+        {hasLocalMedia(student.pictureUrl) ? <img src={resolveMediaUrl(student.pictureUrl)} alt={student.name || "Student"} />
+          : <span className="avatar-placeholder avatar-placeholder--small" aria-label={student.name || "Student"}>{(student.name || "S").charAt(0).toUpperCase()}</span>}
         <span>
           <strong>{student.name || "Student"}</strong>
           <small>{meta || "VIT-AP student"}</small>

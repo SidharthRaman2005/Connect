@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
 
 const CATEGORY_LABELS = { SKILL: "Skills", INTEREST: "Interests", CLUB: "Clubs" };
@@ -85,8 +85,8 @@ export default function StudentProfile() {
       <section className="profile-view">
         <div className="profile-view__banner" aria-hidden="true" />
         <div className="profile-view__main">
-          {profile.pictureUrl ? (
-            <img className="profile-view__avatar" src={resolveMediaUrl(profile.pictureUrl)} alt={profile.name || "Student"} referrerPolicy="no-referrer" />
+          {hasLocalMedia(profile.pictureUrl) ? (
+            <img className="profile-view__avatar" src={resolveMediaUrl(profile.pictureUrl)} alt={profile.name || "Student"} />
           ) : (
             <span className="profile-view__avatar profile-view__avatar--fallback">{(profile.name || "?").charAt(0)}</span>
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api, resolveMediaUrl } from "../lib/api";
+import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -8,12 +8,18 @@ export default function Discover() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const pageSize = 12;
 
-  const loadStudents = async () => {
+  const loadStudents = async (nextPage = 0) => {
     setLoading(true);
     setError("");
     try {
-      setStudents((await api.get("/discover")) || []);
+      const result = await api.get(`/discover?page=${nextPage}&size=${pageSize}`);
+      setStudents(result.content || []);
+      setPage(result.page || 0);
+      setTotalPages(result.totalPages || 0);
     } catch (requestError) {
       setError(requestError.message || "Could not load student recommendations.");
     } finally {
@@ -22,7 +28,7 @@ export default function Discover() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(loadStudents, 0);
+    const timer = setTimeout(() => loadStudents(0), 0);
     return () => clearTimeout(timer);
   }, []);
 
@@ -56,7 +62,7 @@ export default function Discover() {
           <strong>Recommended for you</strong>
           <span>Ranked by shared interests and profile fit</span>
         </div>
-        <button type="button" className="btn btn--secondary" onClick={loadStudents} disabled={loading}>
+        <button type="button" className="btn btn--secondary" onClick={() => loadStudents(page)} disabled={loading}>
           {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
@@ -84,6 +90,13 @@ export default function Discover() {
           <Link className="btn btn--primary" to="/profile">Update profile <span aria-hidden="true">→</span></Link>
         </div>
       )}
+      {!loading && totalPages > 1 && (
+        <div className="search-pager" aria-label="Recommendation pages">
+          <button type="button" onClick={() => loadStudents(page - 1)} disabled={page <= 0}>← Previous</button>
+          <span>Page {page + 1} of {totalPages}</span>
+          <button type="button" onClick={() => loadStudents(page + 1)} disabled={page + 1 >= totalPages}>Next →</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -91,11 +104,11 @@ export default function Discover() {
 function StudentTile({ student, busy, onConnect, onOpen }) {
   const tags = student.tags || [];
   const relation = student.relation;
-  const pictureUrl = student.pictureUrl || `https://i.pravatar.cc/600?img=${((Number(student.id) || 1) % 70) + 1}`;
   return (
     <article className="discover-card">
       <button type="button" className="discover-card__photo" onClick={onOpen}>
-        <img src={student.pictureUrl ? resolveMediaUrl(pictureUrl) : pictureUrl} alt={student.name || "Student"} referrerPolicy="no-referrer" />
+        {hasLocalMedia(student.pictureUrl) ? <img src={resolveMediaUrl(student.pictureUrl)} alt={student.name || "Student"} />
+          : <span className="avatar-placeholder" aria-label={student.name || "Student"}>{(student.name || "S").charAt(0).toUpperCase()}</span>}
         {student.sharedTagCount > 0 && <b>{student.sharedTagCount} shared</b>}
       </button>
       <div className="discover-card__body">

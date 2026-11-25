@@ -10,8 +10,18 @@ export function chatSocketUrl(ticket) {
 
 export function resolveMediaUrl(path) {
   if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//i.test(path)) {
+    try {
+      return new URL(path).origin === API_ORIGIN ? path : "";
+    } catch {
+      return "";
+    }
+  }
   return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+export function hasLocalMedia(path) {
+  return Boolean(path && resolveMediaUrl(path));
 }
 
 let authToken = null;
