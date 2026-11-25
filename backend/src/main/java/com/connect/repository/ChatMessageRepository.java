@@ -43,6 +43,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     long countByRecipientIdAndReadAtIsNull(Long recipientId);
 
+    long countByRecipientIdAndSenderIdInAndReadAtIsNull(Long recipientId, java.util.Collection<Long> senderIds);
+
     long countBySenderIdAndRecipientIdAndReadAtIsNull(Long senderId, Long recipientId);
 
     @Query("""

@@ -34,6 +34,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
               and (:nameQuery = '' or lower(coalesce(s.name, '')) like concat('%', :nameQuery, '%'))
               and (:branchQuery = '' or lower(coalesce(s.branch, '')) = :branchQuery)
               and (:batchQuery is null or s.batch = :batchQuery)
+              and s.id not in :blockedIds
               and (:filterTags = false or exists (
                     select candidate.id from Student candidate join candidate.tags candidateTag
                     where candidate.id = s.id and candidateTag.id in :wantedTagIds))
@@ -48,6 +49,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
               and (:nameQuery = '' or lower(coalesce(s.name, '')) like concat('%', :nameQuery, '%'))
               and (:branchQuery = '' or lower(coalesce(s.branch, '')) = :branchQuery)
               and (:batchQuery is null or s.batch = :batchQuery)
+              and s.id not in :blockedIds
               and (:filterTags = false or exists (
                     select candidate.id from Student candidate join candidate.tags candidateTag
                     where candidate.id = s.id and candidateTag.id in :wantedTagIds))
@@ -59,6 +61,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
                                 @Param("batchQuery") Integer batchQuery,
                                 @Param("filterTags") boolean filterTags,
                                 @Param("wantedTagIds") Collection<Long> wantedTagIds,
+                                @Param("blockedIds") Collection<Long> blockedIds,
                                 @Param("myTagIds") Collection<Long> myTagIds,
                                 Pageable pageable);
 

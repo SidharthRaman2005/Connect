@@ -26,6 +26,15 @@ Create the database once:
 
 Copy `backend/.env.example` to `backend/.env`, set `DB_PASSWORD`, then start the API:
 
+For an existing database, apply the checked-in SQL migrations once before starting the API. Replace `postgres` with the `DB_USERNAME` configured in `backend/.env` if needed:
+
+```powershell
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d connect -f backend/src/main/resources/db/migration/V2026112501__expand_collab_post_status_check.sql
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d connect -f backend/src/main/resources/db/migration/V2026112502__remove_student_last_login_at.sql
+```
+
+The API's development `ddl-auto: update` setting creates the new safety and blog tables when it starts.
+
 ```powershell
 cd backend
 mvn spring-boot:run

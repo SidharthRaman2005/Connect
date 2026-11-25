@@ -21,12 +21,20 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             """)
     Page<Notification> findInbox(@Param("recipientId") Long recipientId, Pageable pageable);
 
+    @Query("select n from Notification n where n.recipient.id = :recipientId and (n.actor is null or n.actor.id not in :excludedActorIds) order by coalesce(n.lastActivityAt, n.createdAt) desc, n.id desc")
+    Page<Notification> findInboxExcludingActors(@Param("recipientId") Long recipientId,
+            @Param("excludedActorIds") java.util.Collection<Long> excludedActorIds, Pageable pageable);
+
     Optional<Notification> findByIdAndRecipientId(Long id, Long recipientId);
 
     Optional<Notification> findFirstByRecipientIdAndActorIdAndTypeAndReadAtIsNull(
             Long recipientId, Long actorId, NotificationType type);
 
     long countByRecipientIdAndReadAtIsNull(Long recipientId);
+
+    @Query("select count(n) from Notification n where n.recipient.id = :recipientId and n.readAt is null and (n.actor is null or n.actor.id not in :excludedActorIds)")
+    long countUnreadExcludingActors(@Param("recipientId") Long recipientId,
+            @Param("excludedActorIds") java.util.Collection<Long> excludedActorIds);
 
     void deleteByRecipientId(Long recipientId);
 

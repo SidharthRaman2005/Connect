@@ -27,10 +27,12 @@ public class ProfileService {
 
     private final StudentRepository studentRepository;
     private final TagRepository tagRepository;
+    private final UserSafetyService safetyService;
 
-    public ProfileService(StudentRepository studentRepository, TagRepository tagRepository) {
+    public ProfileService(StudentRepository studentRepository, TagRepository tagRepository, UserSafetyService safetyService) {
         this.studentRepository = studentRepository;
         this.tagRepository = tagRepository;
+        this.safetyService = safetyService;
     }
 
     /** The authenticated student's own, full profile. */
@@ -95,6 +97,7 @@ public class ProfileService {
     public PublicProfileDto getProfile(Long viewerId, Long targetId) {
         Student target = load(targetId);
         boolean isOwner = target.getId().equals(viewerId);
+        if (!isOwner) safetyService.requireNotBlocked(viewerId, targetId);
         if (!isOwner && target.getProfileVisibility() == ProfileVisibility.PRIVATE) {
             throw new ForbiddenException("This profile is private.");
         }

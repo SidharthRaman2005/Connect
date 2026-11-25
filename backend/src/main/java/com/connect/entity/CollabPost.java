@@ -149,7 +149,9 @@ public class CollabPost {
     }
 
     public Instant getExpiresAt() {
-        return createdAt == null ? null : createdAt.plus(RECRUITMENT_WINDOW);
+        if (createdAt == null) return null;
+        Instant defaultExpiry = createdAt.plus(RECRUITMENT_WINDOW);
+        return defaultExpiry;
     }
 
     public Instant getCreatedAt() {

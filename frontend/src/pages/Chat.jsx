@@ -4,6 +4,7 @@ import { api, chatSocketUrl, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/ToastProvider";
 import ConfirmDialog from "../components/ConfirmDialog";
+import UserSafetyActions from "../components/UserSafetyActions";
 
 const PAGE_SIZE = 30;
 const MAX_RECONNECT_ATTEMPTS = 6;
@@ -453,6 +454,7 @@ export default function Chat() {
               <Link className="inbox-profile-link" to={`/students/${selected.other.id}`} aria-label="View profile">
                 View profile <span>→</span>
               </Link>
+              <UserSafetyActions studentId={selected.other.id} onBlocked={() => { setConversations((items) => items.filter((item) => item.other.id !== selected.other.id)); setSelectedId(null); }} />
             </div>
 
             <div className="inbox-messages" ref={messagesContainerRef}>

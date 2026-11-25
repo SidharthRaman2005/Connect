@@ -32,6 +32,8 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [blockedError, setBlockedError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -49,6 +51,13 @@ export default function Profile() {
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, []);
+
+  useEffect(() => { api.get("/users/blocked").then((items) => setBlockedUsers(items || [])).catch((error) => setBlockedError(error.message || "Could not load blocked users.")); }, []);
+
+  const unblockUser = async (id) => {
+    try { await api.del(`/users/${id}/block`); setBlockedUsers((items) => items.filter((item) => item.id !== id)); toast.success("Student unblocked."); }
+    catch (error) { toast.error(error.message || "Could not unblock this student."); }
+  };
 
   const byId = useMemo(() => new Map(catalog.map((tag) => [tag.id, tag])), [catalog]);
   const selectedTags = useMemo(
@@ -294,6 +303,13 @@ export default function Profile() {
         onConfirm={handlePhotoRemove}
         onCancel={() => setConfirmRemove(false)}
       />
+      <section className="profile-section blocked-users-section">
+        <div className="profile-section__head"><h2>Blocked students</h2><span>Blocked accounts are hidden from discovery, chat, and notifications.</span></div>
+        <div className="profile-section__body">
+          {blockedError && <p className="page-error">{blockedError}</p>}
+          {blockedUsers.length ? blockedUsers.map((person) => <div className="blocked-user-row" key={person.id}><span>{person.name || person.email || "Student"}</span><button type="button" className="btn btn--sm btn--secondary" onClick={() => unblockUser(person.id)}>Unblock</button></div>) : !blockedError && <p className="connection-empty">You have not blocked anyone.</p>}
+        </div>
+      </section>
     </div>
   );
 }

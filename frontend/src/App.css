@@ -529,3 +529,24 @@
   .auth-page { padding-top: 76px; }
   .theme-toggle { top: 18px; right: 16px; }
 }
+
+/* Safety, richer blog actions, and remaining collab management controls. */
+.user-safety-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.user-safety-report { display: grid; gap: 8px; flex-basis: 100%; min-width: 240px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.user-safety-report .textarea { min-height: 76px; }
+.blocked-user-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 10px 0; }
+.blog-search-row { display: flex; gap: 10px; margin: 22px 0; }
+.blog-search-row input { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); background: var(--surface); }
+.blog-card__tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.blog-card__tags button { border: 1px solid var(--border); border-radius: 999px; padding: 5px 9px; color: var(--accent); background: transparent; cursor: pointer; }
+.blog-interactions { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
+.blog-interactions button { border: 0; border-radius: 9px; padding: 7px 10px; color: var(--muted); background: var(--surface); cursor: pointer; }
+.blog-interactions button.is-liked { color: var(--danger); }
+.blog-comments { display: grid; gap: 10px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+.blog-comments > form { display: flex; gap: 8px; }
+.blog-comments > form input { flex: 1; min-width: 100px; border: 1px solid var(--border); border-radius: 9px; padding: 10px; color: var(--text); background: var(--surface); }
+.blog-comment { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; }
+.blog-comment small { display: block; color: var(--muted); }
+.blog-comment p { margin: 5px 0 0; white-space: pre-wrap; }
+.blog-comment > button { align-self: flex-start; border: 0; color: var(--danger); background: transparent; cursor: pointer; }
+@media (max-width: 680px) { .blog-search-row, .blog-comments > form { flex-wrap: wrap; } .blog-search-row input { flex-basis: 100%; } }

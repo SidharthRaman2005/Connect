@@ -38,6 +38,9 @@ class ProfileServiceTest {
     @Mock
     private TagRepository tagRepository;
 
+    @Mock
+    private UserSafetyService safetyService;
+
     @InjectMocks
     private ProfileService profileService;
 

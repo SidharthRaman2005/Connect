@@ -1,6 +1,8 @@
 package com.connect.entity;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.OrderColumn;
 
 @Entity
 @Table(name = "blog_posts")
@@ -30,6 +35,12 @@ public class BlogPost {
 
     @Column(nullable = false, length = 10000)
     private String content;
+
+    @ElementCollection
+    @CollectionTable(name = "blog_post_tags", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "tag", nullable = false, length = 40)
+    @OrderColumn(name = "tag_order")
+    private List<String> tags = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -63,6 +74,8 @@ public class BlogPost {
     public void setTitle(String title) { this.title = title; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags.clear(); if (tags != null) this.tags.addAll(tags); }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

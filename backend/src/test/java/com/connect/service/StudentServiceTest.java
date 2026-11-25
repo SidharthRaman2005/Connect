@@ -43,7 +43,6 @@ class StudentServiceTest {
         assertThat(result.student().getGoogleId()).isEqualTo("google-sub-1");
         assertThat(result.student().getEmail()).isEqualTo("new@vitapstudent.ac.in");
         assertThat(result.student().getName()).isEqualTo("New Student");
-        assertThat(result.student().getLastLoginAt()).isNotNull();
         verify(studentRepository).save(any(Student.class));
     }
 

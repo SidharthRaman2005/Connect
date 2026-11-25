@@ -1,6 +1,5 @@
 package com.connect.service;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -60,8 +59,6 @@ public class StudentService {
         if (newAccount) {
             student.setPictureUrl(verifiedUser.picture());
         }
-        student.setLastLoginAt(Instant.now());
-
         // Derive the batch from the email if not already set (also backfills
         // accounts created before M2.1).
         if (student.getBatch() == null) {

@@ -88,8 +88,6 @@ public class Student {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(name = "last_login_at")
-    private Instant lastLoginAt;
 
     public Student() {
         // Required by JPA; public so it can be constructed in tests/services.
@@ -196,11 +194,4 @@ public class Student {
         return updatedAt;
     }
 
-    public Instant getLastLoginAt() {
-        return lastLoginAt;
-    }
-
-    public void setLastLoginAt(Instant lastLoginAt) {
-        this.lastLoginAt = lastLoginAt;
-    }
 }

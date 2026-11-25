@@ -37,17 +37,20 @@ public class ChatService {
     private final ConnectionRepository connectionRepository;
     private final StudentRepository studentRepository;
     private final NotificationService notificationService;
+    private final UserSafetyService safetyService;
 
     public ChatService(ChatMessageRepository messageRepository,
                        ChatPreferenceRepository preferenceRepository,
                        ConnectionRepository connectionRepository,
                        StudentRepository studentRepository,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       UserSafetyService safetyService) {
         this.messageRepository = messageRepository;
         this.preferenceRepository = preferenceRepository;
         this.connectionRepository = connectionRepository;
         this.studentRepository = studentRepository;
         this.notificationService = notificationService;
+        this.safetyService = safetyService;
     }
 
     @Transactional
@@ -58,6 +61,7 @@ public class ChatService {
         String content = clean(rawContent);
         Student sender = load(senderId);
         Student recipient = load(recipientId);
+        safetyService.requireNotBlocked(senderId, recipientId);
         requireConnected(senderId, recipientId);
         ChatMessage message = new ChatMessage(sender, recipient, content);
         if (recipientOnline) message.markDelivered();
@@ -75,7 +79,7 @@ public class ChatService {
         List<ChatMessage> pending = messageRepository
                 .findByRecipientIdAndDeliveredAtIsNullAndReadAtIsNull(studentId);
         if (pending.isEmpty()) return List.of();
-        return pending.stream().map(message -> {
+        return pending.stream().filter(message -> !safetyService.isBlockedEitherWay(studentId, message.getSender().getId())).map(message -> {
             message.markDelivered();
             return ChatMessageDto.from(messageRepository.save(message));
         }).toList();
@@ -83,7 +87,9 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public long unreadCount(Long studentId) {
-        return messageRepository.countByRecipientIdAndReadAtIsNull(studentId);
+        long total = messageRepository.countByRecipientIdAndReadAtIsNull(studentId);
+        List<Long> blocked = safetyService.blockedIds(studentId);
+        return blocked.isEmpty() ? total : Math.max(0, total - messageRepository.countByRecipientIdAndSenderIdInAndReadAtIsNull(studentId, blocked));
     }
 
     @Transactional(readOnly = true)
@@ -133,6 +139,7 @@ public class ChatService {
         for (Connection connection : connectionRepository.findByStudentAndStatus(meId, ConnectionStatus.ACCEPTED)) {
             Student other = connection.getRequester().getId().equals(meId)
                     ? connection.getAddressee() : connection.getRequester();
+            if (safetyService.isBlockedEitherWay(meId, other.getId())) continue;
             ChatPreference preference = preferenceRepository.findByStudentIdAndOtherId(meId, other.getId()).orElse(null);
             if (preference != null && preference.isArchived() && !includeArchived) continue;
             boolean muted = preference != null && preference.isMuted();
@@ -206,6 +213,7 @@ public class ChatService {
 
     private void requireConnected(Long firstId, Long secondId) {
         if (firstId.equals(secondId)) throw new BadRequestException("You cannot chat with yourself.");
+        safetyService.requireNotBlocked(firstId, secondId);
         boolean connected = connectionRepository.findBetween(firstId, secondId).stream()
                 .anyMatch(connection -> connection.getStatus() == ConnectionStatus.ACCEPTED);
         if (!connected) throw new ForbiddenException("Chat is available only between connected students.");

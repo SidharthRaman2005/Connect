@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, hasLocalMedia, resolveMediaUrl } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
+import UserSafetyActions from "../components/UserSafetyActions";
 
 const CATEGORY_LABELS = { SKILL: "Skills", INTEREST: "Interests", CLUB: "Clubs" };
 const CATEGORY_ICONS = { SKILL: "◆", INTEREST: "✦", CLUB: "◎" };
@@ -100,6 +101,7 @@ export default function StudentProfile() {
               {requested ? "Request sent ✓" : connecting ? "Sending…" : "Connect"}
             </button>
             <Link className="btn btn--secondary" to="/discover">Discover more</Link>
+            <UserSafetyActions studentId={profile.id} onBlocked={() => window.history.back()} />
           </div>
         </div>
         <div className="profile-view__stats">

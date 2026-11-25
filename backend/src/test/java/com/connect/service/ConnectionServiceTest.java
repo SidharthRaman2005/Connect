@@ -34,6 +34,9 @@ class ConnectionServiceTest {
     @Mock
     private StudentRepository studentRepository;
 
+    @Mock
+    private UserSafetyService safetyService;
+
     @InjectMocks
     private ConnectionService connectionService;
 

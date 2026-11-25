@@ -26,10 +26,12 @@ public class DiscoveryService {
     private static final Long NO_TAG_SENTINEL = -1L;
     private final StudentRepository studentRepository;
     private final ConnectionService connectionService;
+    private final UserSafetyService safetyService;
 
-    public DiscoveryService(StudentRepository studentRepository, ConnectionService connectionService) {
+    public DiscoveryService(StudentRepository studentRepository, ConnectionService connectionService, UserSafetyService safetyService) {
         this.studentRepository = studentRepository;
         this.connectionService = connectionService;
+        this.safetyService = safetyService;
     }
 
     @Transactional(readOnly = true)
@@ -60,9 +62,11 @@ public class DiscoveryService {
                 .collect(Collectors.toSet());
         Set<Long> queryTags = wantedTags.isEmpty() ? Set.of(NO_TAG_SENTINEL) : wantedTags;
         Set<Long> rankTags = myTags.isEmpty() ? Set.of(NO_TAG_SENTINEL) : myTags;
+        Set<Long> excludedIds = safetyService.blockedIds(meId).stream().collect(Collectors.toSet());
+        if (excludedIds.isEmpty()) excludedIds = Set.of(NO_TAG_SENTINEL);
 
         Page<Long> idPage = studentRepository.findDiscoveryIds(meId, ProfileVisibility.PUBLIC,
-                normalize(query), normalize(branch), batch, !wantedTags.isEmpty(), queryTags, rankTags,
+                normalize(query), normalize(branch), batch, !wantedTags.isEmpty(), queryTags, excludedIds, rankTags,
                 PageRequest.of(page, size));
         List<Long> ids = idPage.getContent();
         Map<Long, Student> byId = new HashMap<>();
