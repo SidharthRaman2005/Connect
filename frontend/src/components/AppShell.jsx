@@ -22,6 +22,7 @@ export default function AppShell() {
   const initials = (student?.name || "S").charAt(0).toUpperCase();
   const displayName = stripRegistrationNumber(student?.name || "My profile");
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadCollabRequests, setUnreadCollabRequests] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -37,6 +38,12 @@ export default function AppShell() {
       active = false;
       window.removeEventListener("connect:chat-unread", onChatActivity);
     };
+  }, []);
+
+  useEffect(() => {
+    const onCollabActivity = (event) => setUnreadCollabRequests(Boolean(event.detail?.unread));
+    window.addEventListener("connect:collab-activity", onCollabActivity);
+    return () => window.removeEventListener("connect:collab-activity", onCollabActivity);
   }, []);
 
   const handleLogout = async () => {
@@ -61,6 +68,7 @@ export default function AppShell() {
               {item.to === "/chat" && unreadMessages > 0 && (
                 <span className="app-nav__dot" title={`${unreadMessages} unread messages`} aria-label={`${unreadMessages} unread messages`} />
               )}
+              {item.to === "/collabs" && unreadCollabRequests && <span className="app-nav__dot" title="New collab request" aria-label="New collab request" />}
             </NavLink>
           ))}
         </nav>
@@ -100,6 +108,7 @@ export default function AppShell() {
             <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => isActive ? "is-active" : ""}>
               <span aria-hidden="true">{item.icon}</span>{item.label}
               {item.to === "/chat" && unreadMessages > 0 && <span className="app-mobile-nav__dot" aria-hidden="true" />}
+              {item.to === "/collabs" && unreadCollabRequests && <span className="app-mobile-nav__dot" aria-hidden="true" />}
             </NavLink>
           ))}
         </nav>

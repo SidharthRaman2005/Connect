@@ -14,7 +14,9 @@ export default function NotificationBell() {
   const load = useCallback(async () => {
     try {
       const inbox = await api.get("/notifications?page=0&size=30");
-      setNotifications(inbox.content || []);
+      const items = inbox.content || [];
+      setNotifications(items);
+      dispatchCollabActivity(items);
       setUnreadCount(inbox.unreadCount || 0);
       setError("");
     } catch (e) {
@@ -83,7 +85,11 @@ export default function NotificationBell() {
   const markRead = async (notification) => {
     try {
       await api.del(`/notifications/${notification.id}`);
-      setNotifications((items) => items.filter((item) => item.id !== notification.id));
+      setNotifications((items) => {
+        const next = items.filter((item) => item.id !== notification.id);
+        dispatchCollabActivity(next);
+        return next;
+      });
       if (!notification.readAt) setUnreadCount((count) => Math.max(0, count - 1));
     } catch (e) {
       setError(e.message || "Could not clear the notification.");
@@ -94,6 +100,7 @@ export default function NotificationBell() {
     try {
       await api.del("/notifications/all");
       setNotifications([]);
+      dispatchCollabActivity([]);
       setUnreadCount(0);
     } catch (e) {
       setError(e.message || "Could not clear notifications.");
@@ -167,9 +174,14 @@ export default function NotificationBell() {
 function hrefFor(notification) {
   switch (notification.type) {
     case "MESSAGE": return notification.actor ? `/chat?with=${notification.actor.id}` : "/chat";
-    case "COLLAB_APPLICATION": return "/collabs/add";
+    case "COLLAB_APPLICATION": return "/collabs/manage";
     case "COLLAB_ACCEPTED": return "/collabs";
     default: return "/connections";
   }
+}
+
+function dispatchCollabActivity(notifications) {
+  const unread = notifications.some((notification) => notification.type === "COLLAB_APPLICATION" && !notification.readAt);
+  window.dispatchEvent(new CustomEvent("connect:collab-activity", { detail: { unread } }));
 }
 

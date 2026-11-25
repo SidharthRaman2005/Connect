@@ -1,6 +1,7 @@
 package com.connect.repository;
 
 import java.util.List;
+import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -23,4 +24,6 @@ public interface CollabRequestRepository extends JpaRepository<CollabRequest, Lo
     List<CollabRequest> findByApplicantIdAndStatusAndSeenFalse(Long applicantId, CollabRequestStatus status);
 
     int countByPostIdAndStatus(Long postId, CollabRequestStatus status);
+
+    void deleteByPostIdIn(Collection<Long> postIds);
 }

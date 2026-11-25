@@ -1,6 +1,7 @@
 package com.connect.entity;
 
 import java.time.Instant;
+import java.time.Duration;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,6 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 /**
  * A collaboration opportunity a student publishes to recruit teammates (M4.2):
@@ -23,8 +25,12 @@ import jakarta.persistence.Table;
  * the team is full.
  */
 @Entity
-@Table(name = "collab_posts")
+@Table(name = "collab_posts", indexes = {
+        @Index(name = "idx_collab_posts_status_created", columnList = "status,created_at"),
+        @Index(name = "idx_collab_posts_status_terminal", columnList = "status,terminal_at")
+})
 public class CollabPost {
+    public static final Duration RECRUITMENT_WINDOW = Duration.ofDays(5);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +54,12 @@ public class CollabPost {
     @Column(nullable = false, length = 20)
     private CollabStatus status = CollabStatus.OPEN;
 
+    @Column(name = "required_people", nullable = false, columnDefinition = "integer default 1")
+    private int requiredPeople = 1;
+
+    @Column(name = "terminal_at")
+    private Instant terminalAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,11 +70,16 @@ public class CollabPost {
         // Required by JPA.
     }
 
-    public CollabPost(Student owner, String title, String description, CollabType type) {
+    public CollabPost(Student owner, String title, String description, CollabType type, int requiredPeople) {
         this.owner = owner;
         this.title = title;
         this.description = description;
         this.type = type;
+        this.requiredPeople = requiredPeople;
+    }
+
+    public CollabPost(Student owner, String title, String description, CollabType type) {
+        this(owner, title, description, type, 1);
     }
 
     @PrePersist
@@ -115,6 +132,24 @@ public class CollabPost {
 
     public void setStatus(CollabStatus status) {
         this.status = status;
+    }
+
+    public int getRequiredPeople() { return requiredPeople; }
+
+    public Instant getTerminalAt() { return terminalAt; }
+
+    public void markCompleted(Instant at) {
+        this.status = CollabStatus.COMPLETED;
+        this.terminalAt = at;
+    }
+
+    public void markExpired(Instant at) {
+        this.status = CollabStatus.EXPIRED;
+        this.terminalAt = at;
+    }
+
+    public Instant getExpiresAt() {
+        return createdAt == null ? null : createdAt.plus(RECRUITMENT_WINDOW);
     }
 
     public Instant getCreatedAt() {

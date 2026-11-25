@@ -17,7 +17,10 @@ public record OwnerCollabPostDto(
         String description,
         CollabType type,
         CollabStatus status,
+        int requiredPeople,
         Instant createdAt,
+        Instant expiresAt,
+        Instant terminalAt,
         int acceptedCount,
         List<CollabRequestDto> requests) {
 
@@ -28,7 +31,10 @@ public record OwnerCollabPostDto(
                 p.getDescription(),
                 p.getType(),
                 p.getStatus(),
+                p.getRequiredPeople(),
                 p.getCreatedAt(),
+                p.getExpiresAt(),
+                p.getTerminalAt(),
                 acceptedCount,
                 requests);
     }

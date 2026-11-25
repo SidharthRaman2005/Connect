@@ -6,6 +6,10 @@ package com.connect.entity;
 public enum CollabStatus {
     /** Visible in the feed and accepting requests. */
     OPEN,
+    /** Requested team size has been accepted by the owner. */
+    COMPLETED,
+    /** The five-day recruitment window ended before the team was filled. */
+    EXPIRED,
     /** Closed by the owner (e.g. the team is full); no new requests. */
     CLOSED
 }

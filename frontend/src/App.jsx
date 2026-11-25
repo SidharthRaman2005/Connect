@@ -15,6 +15,7 @@ const Connections = lazy(() => import("./pages/Connections"));
 const Blog = lazy(() => import("./pages/Blog"));
 const Collabs = lazy(() => import("./pages/Collabs"));
 const AddCollab = lazy(() => import("./pages/AddCollab"));
+const ManageCollabs = lazy(() => import("./pages/ManageCollabs"));
 const Chat = lazy(() => import("./pages/Chat"));
 
 function RouteLoading() {
@@ -42,6 +43,7 @@ function App() {
           <Route path="/blogs" element={<Blog />} />
           <Route path="/collabs" element={<Collabs />} />
           <Route path="/collabs/add" element={<AddCollab />} />
+          <Route path="/collabs/manage" element={<ManageCollabs />} />
         </Route>
       </Routes>
     </Suspense>

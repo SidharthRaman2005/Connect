@@ -3,8 +3,12 @@ package com.connect.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Comparator;
 
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.connect.dto.CollabNotificationDto;
@@ -49,15 +53,20 @@ public class CollabService {
         this.notificationService = notificationService;
     }
 
-    /** Recent open posts, each tagged with the viewer's relation to it. */
-    @Transactional(readOnly = true)
+    /** Open posts first, followed by recently completed/expired posts. */
+    @Transactional
     public List<CollabPostDto> feed(Long viewerId) {
         Map<Long, CollabRequestStatus> myRequests = new HashMap<>();
         for (CollabRequest r : requestRepository.findByApplicantId(viewerId)) {
             myRequests.put(r.getPost().getId(), r.getStatus());
         }
-        return postRepository.findTop50ByStatusOrderByCreatedAtDesc(CollabStatus.OPEN).stream()
-                .map(p -> CollabPostDto.of(p, relationFor(p, viewerId, myRequests)))
+        return postRepository.findByStatusInOrderByCreatedAtDesc(
+                        List.of(CollabStatus.OPEN, CollabStatus.COMPLETED, CollabStatus.EXPIRED)).stream()
+                .sorted(Comparator.comparingInt((CollabPost p) -> p.getStatus() == CollabStatus.OPEN ? 0 : 1)
+                        .thenComparing(CollabPost::getCreatedAt, Comparator.reverseOrder()))
+                .map(p -> CollabPostDto.of(p,
+                        requestRepository.countByPostIdAndStatus(p.getId(), CollabRequestStatus.ACCEPTED),
+                        relationFor(p, viewerId, myRequests)))
                 .toList();
     }
 
@@ -67,12 +76,12 @@ public class CollabService {
         CollabPost post = new CollabPost(owner,
                 request.title().trim(),
                 blankToNull(request.description()),
-                request.type());
-        return CollabPostDto.of(postRepository.save(post), CollabRelation.OWNER);
+                request.type(), request.requiredPeople());
+        return CollabPostDto.of(postRepository.save(post), 0, CollabRelation.OWNER);
     }
 
     /** The caller's posts with their join requests, for management. */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<OwnerCollabPostDto> myPosts(Long ownerId) {
         return postRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream()
                 .map(p -> {
@@ -90,6 +99,9 @@ public class CollabService {
     @Transactional
     public OwnerCollabPostDto close(Long ownerId, Long postId) {
         CollabPost post = loadOwnedPost(ownerId, postId);
+        if (post.getStatus() != CollabStatus.OPEN) {
+            throw new BadRequestException("Only an open collab can be closed.");
+        }
         post.setStatus(CollabStatus.CLOSED);
         postRepository.save(post);
         List<CollabRequestDto> requests = requestRepository
@@ -105,6 +117,7 @@ public class CollabService {
     public CollabRequestDto requestToJoin(Long applicantId, Long postId) {
         CollabPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collab post not found."));
+        expireIfDue(post, Instant.now());
         if (post.getStatus() != CollabStatus.OPEN) {
             throw new BadRequestException("This collab is closed.");
         }
@@ -128,21 +141,73 @@ public class CollabService {
     public CollabRequestDto accept(Long ownerId, Long requestId) {
         CollabRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Request not found."));
-        if (!request.getPost().getOwner().getId().equals(ownerId)) {
+        CollabPost post = postRepository.findByIdForUpdate(request.getPost().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Collab post not found."));
+        if (!post.getOwner().getId().equals(ownerId)) {
             throw new ForbiddenException("Only the collab owner can accept requests.");
+        }
+        expireIfDue(post, Instant.now());
+        if (post.getStatus() != CollabStatus.OPEN) {
+            throw new BadRequestException("This collab is no longer accepting members.");
         }
         if (request.getStatus() != CollabRequestStatus.PENDING) {
             throw new BadRequestException("This request has already been handled.");
         }
+        int acceptedCount = requestRepository.countByPostIdAndStatus(post.getId(), CollabRequestStatus.ACCEPTED);
+        if (acceptedCount >= post.getRequiredPeople()) {
+            post.markCompleted(Instant.now());
+            throw new BadRequestException("This collab already has all required teammates.");
+        }
         request.setStatus(CollabRequestStatus.ACCEPTED);
         request.setSeen(false); // so the applicant is notified
         CollabRequest accepted = requestRepository.save(request);
+        acceptedCount += 1;
+        if (acceptedCount == post.getRequiredPeople()) {
+            post.markCompleted(Instant.now());
+        }
+        postRepository.save(post);
         if (notificationService != null) {
             notificationService.create(request.getApplicant(), request.getPost().getOwner(),
                     NotificationType.COLLAB_ACCEPTED, request.getId(),
                     "You were accepted into " + request.getPost().getTitle() + ".");
         }
         return CollabRequestDto.from(accepted);
+    }
+
+    /** Expires overdue recruitment and removes terminal posts after their one-day grace period. */
+    @Scheduled(fixedDelayString = "${app.collabs.lifecycle-sweep-ms:60000}")
+    @Transactional
+    public void sweepLifecycle() {
+        Instant now = Instant.now();
+        List<CollabPost> terminalized = new java.util.ArrayList<>();
+        for (CollabPost post : postRepository.findByStatusOrderByCreatedAtDesc(CollabStatus.OPEN)) {
+            int accepted = requestRepository.countByPostIdAndStatus(
+                    post.getId(), CollabRequestStatus.ACCEPTED);
+            if (accepted >= post.getRequiredPeople()) {
+                post.markCompleted(now);
+                terminalized.add(post);
+            } else if (!now.isBefore(post.getExpiresAt())) {
+                post.markExpired(now);
+                terminalized.add(post);
+            }
+        }
+        if (!terminalized.isEmpty()) postRepository.saveAll(terminalized);
+
+        List<CollabPost> removable = postRepository.findByStatusInAndTerminalAtBefore(
+                List.of(CollabStatus.COMPLETED, CollabStatus.EXPIRED), now.minus(Duration.ofDays(1)));
+        if (!removable.isEmpty()) {
+            List<Long> ids = removable.stream().map(CollabPost::getId).toList();
+            requestRepository.deleteByPostIdIn(ids);
+            postRepository.deleteAll(removable);
+        }
+    }
+
+    private void expireIfDue(CollabPost post, Instant now) {
+        Instant expiresAt = post.getExpiresAt();
+        if (post.getStatus() == CollabStatus.OPEN && expiresAt != null && !now.isBefore(expiresAt)) {
+            post.markExpired(now);
+            postRepository.save(post);
+        }
     }
 
     /** The caller's "you're in" notifications (accepted, not yet seen). */
