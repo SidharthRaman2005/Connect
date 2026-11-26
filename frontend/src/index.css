@@ -331,7 +331,7 @@ img { display: block; max-width: 100%; }
   gap: 72px;
   padding: 24px 0;
 }
-.auth-brand { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 56px; font-size: 15px; font-weight: 800; letter-spacing: 0.16em; }
+.auth-brand { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 42px; font-size: 15px; font-weight: 800; letter-spacing: 0.16em; }
 .auth-brand__mark { display: grid; width: 30px; height: 30px; grid-template-columns: repeat(2, 8px); grid-template-rows: repeat(2, 8px); gap: 4px; place-content: center; border-radius: 9px; background: var(--accent); }
 .auth-brand__mark i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-contrast); }
 .auth-eyebrow { margin-bottom: 16px; color: var(--accent-ink); font-size: 11px; font-weight: 800; letter-spacing: 0.18em; }
@@ -357,13 +357,13 @@ img { display: block; max-width: 100%; }
    Onboarding
    ============================================================ */
 .onboarding-page { display: grid; place-items: center; min-height: 100vh; padding: 56px 20px; background: var(--bg); }
-.onboarding-card { width: min(100%, 720px); padding: 48px clamp(26px, 6vw, 60px); border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow); }
-.onboarding-progress { display: flex; gap: 7px; margin-bottom: 38px; }
+.onboarding-card { width: min(100%, 720px); padding: 42px clamp(26px, 6vw, 60px); border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow); }
+.onboarding-progress { display: flex; gap: 7px; margin-bottom: 32px; }
 .onboarding-progress span { height: 4px; flex: 1; border-radius: 99px; background: var(--border); }
 .onboarding-progress .onboarding-progress__active { background: var(--accent); }
 .onboarding-card h1 { margin-bottom: 14px; font-size: clamp(38px, 5vw, 54px); line-height: 1; letter-spacing: -0.035em; }
-.onboarding-intro { max-width: 520px; margin-bottom: 36px; color: var(--muted); line-height: 1.6; }
-.onboarding-form { display: grid; gap: 24px; }
+.onboarding-intro { max-width: 520px; margin-bottom: 28px; color: var(--muted); line-height: 1.6; }
+.onboarding-form { display: grid; gap: 20px; }
 .onboarding-identity { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-raised); }
 .onboarding-identity strong, .onboarding-identity span { display: block; }
 .onboarding-identity span { margin-top: 3px; color: var(--muted); font-size: 12px; }
