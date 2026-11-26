@@ -129,7 +129,16 @@ export default function NotificationBell() {
   return (
     <div ref={ref} className="notification-bell">
       <button type="button" onClick={toggle} aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`} className="notification-bell__trigger">
-        <span aria-hidden="true">🔔</span>
+        <svg className="notification-bell__icon" viewBox="0 0 32 32" aria-hidden="true" fill="none">
+          <defs>
+            <linearGradient id="notification-bell-gradient" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse">
+              <stop stopColor="var(--bell-gradient-start)" />
+              <stop offset="1" stopColor="var(--bell-gradient-end)" />
+            </linearGradient>
+          </defs>
+          <path d="M25 21.5H7.1c-1.5 0-2.4-1.7-1.5-2.9l2.3-3.1V12a8.1 8.1 0 0 1 16.2 0v3.5l2.3 3.1c.9 1.2 0 2.9-1.4 2.9Z" stroke="url(#notification-bell-gradient)" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12.7 25a3.35 3.35 0 0 0 6.6 0" stroke="url(#notification-bell-gradient)" strokeWidth="2.25" strokeLinecap="round" />
+        </svg>
         {unreadCount > 0 && <span className="notification-bell__count">{unreadCount > 99 ? "99+" : unreadCount}</span>}
       </button>
 
