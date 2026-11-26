@@ -129,7 +129,7 @@ export default function Search() {
         {selectedTagIds.size > 0 && (
           <div className="search-selected-tags">
             {[...selectedTagIds].map((id) => (
-              <span key={id}>{byId.get(id)?.name || id}<button type="button" onClick={() => removeTag(id)} aria-label={`Remove ${byId.get(id)?.name || "tag"}`}>×</button></span>
+              <span key={id}>{byId.get(id)?.name || id}<button className="search-selected-tags__remove" type="button" onClick={() => removeTag(id)} aria-label={`Remove ${byId.get(id)?.name || "tag"}`}>×</button></span>
             ))}
           </div>
         )}
@@ -176,9 +176,9 @@ export default function Search() {
           )}
           {results.totalPages > 1 && (
             <div className="search-pager">
-              <button type="button" onClick={() => runSearch(page - 1)} disabled={page <= 0}>← Previous</button>
+              <button className="btn btn--secondary btn--sm" type="button" onClick={() => runSearch(page - 1)} disabled={page <= 0}>← Previous</button>
               <span>Page {page + 1} of {results.totalPages}</span>
-              <button type="button" onClick={() => runSearch(page + 1)} disabled={page + 1 >= results.totalPages}>Next →</button>
+              <button className="btn btn--secondary btn--sm" type="button" onClick={() => runSearch(page + 1)} disabled={page + 1 >= results.totalPages}>Next →</button>
             </div>
           )}
         </section>

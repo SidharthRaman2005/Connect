@@ -92,9 +92,9 @@ export default function Discover() {
       )}
       {!loading && totalPages > 1 && (
         <div className="search-pager" aria-label="Recommendation pages">
-          <button type="button" onClick={() => loadStudents(page - 1)} disabled={page <= 0}>← Previous</button>
+          <button className="btn btn--secondary btn--sm" type="button" onClick={() => loadStudents(page - 1)} disabled={page <= 0}>← Previous</button>
           <span>Page {page + 1} of {totalPages}</span>
-          <button type="button" onClick={() => loadStudents(page + 1)} disabled={page + 1 >= totalPages}>Next →</button>
+          <button className="btn btn--secondary btn--sm" type="button" onClick={() => loadStudents(page + 1)} disabled={page + 1 >= totalPages}>Next →</button>
         </div>
       )}
     </div>
