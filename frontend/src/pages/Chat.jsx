@@ -456,10 +456,12 @@ export default function Chat() {
                     .filter(Boolean).join(" · ")}
                 </div>
               </div>
-              <Link className="inbox-profile-link" to={`/students/${selected.other.id}`} aria-label="View profile">
-                View profile <span>→</span>
-              </Link>
-              <UserSafetyActions studentId={selected.other.id} onBlocked={() => { setConversations((items) => items.filter((item) => item.other.id !== selected.other.id)); setSelectedId(null); }} />
+              <div className="inbox-chat__actions">
+                <Link className="inbox-profile-link" to={`/students/${selected.other.id}`} aria-label="View profile">
+                  View profile <span>→</span>
+                </Link>
+                <UserSafetyActions showReport={false} studentId={selected.other.id} onBlocked={() => { setConversations((items) => items.filter((item) => item.other.id !== selected.other.id)); setSelectedId(null); }} />
+              </div>
             </div>
 
             <div className="inbox-messages" ref={messagesContainerRef}>

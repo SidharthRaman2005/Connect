@@ -312,9 +312,12 @@
 .inbox-chat__identity { min-width: 0; flex: 1; }
 .inbox-chat__identity strong { display: block; font-size: 15px; }
 .inbox-chat__identity .inbox-muted { padding: 0; margin-top: 3px; font-size: 12px; }
+.inbox-chat__actions { display: flex; align-items: center; gap: 9px; }
 .inbox-profile-link { border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; color: var(--text-soft); font-size: 12px; font-weight: 700; }
 .inbox-profile-link:hover { border-color: var(--accent-border); color: var(--accent-ink); }
 .inbox-profile-link span { margin-left: 5px; }
+.inbox-chat__actions .user-safety-actions { flex-wrap: nowrap; }
+.inbox-chat__actions .user-safety-actions .btn { min-height: 36px; padding: 0 12px; }
 .inbox-messages { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 12px; overflow-y: auto; padding: 28px clamp(18px, 4vw, 48px); background: var(--bg-soft); scroll-behavior: smooth; }
 .inbox-older { align-self: center; border: 0; padding: 6px 10px; background: transparent; color: var(--accent-ink); font-size: 12px; font-weight: 700; }
 .inbox-message-row { display: flex; }
@@ -584,7 +587,9 @@
   .inbox-layout { height: min(760px, calc(100dvh - 210px)); min-height: 520px; }
   .inbox-sidebar { max-height: 215px; padding: 14px 10px; }
   .inbox-chat__header { min-height: 68px; gap: 9px; padding: 10px 12px; }
-  .inbox-profile-link { padding: 8px; font-size: 11px; }
+  .inbox-chat__actions { gap: 6px; }
+  .inbox-profile-link { padding: 8px; font-size: 11px; white-space: nowrap; }
+  .inbox-chat__actions .user-safety-actions .btn { min-height: 34px; padding: 0 9px; }
   .inbox-messages { padding: 18px 13px; }
   .inbox-message-stack { max-width: 86%; }
   .inbox-composer { gap: 8px; padding: 11px; }
