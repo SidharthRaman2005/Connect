@@ -573,11 +573,4 @@
 .blog-interactions { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
 .blog-interactions button { border: 0; border-radius: 9px; padding: 7px 10px; color: var(--muted); background: var(--surface); cursor: pointer; }
 .blog-interactions button.is-liked { color: var(--danger); }
-.blog-comments { display: grid; gap: 10px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
-.blog-comments > form { display: flex; gap: 8px; }
-.blog-comments > form input { flex: 1; min-width: 100px; border: 1px solid var(--border); border-radius: 9px; padding: 10px; color: var(--text); background: var(--surface); }
-.blog-comment { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; }
-.blog-comment small { display: block; color: var(--muted); }
-.blog-comment p { margin: 5px 0 0; white-space: pre-wrap; }
-.blog-comment > button { align-self: flex-start; border: 0; color: var(--danger); background: transparent; cursor: pointer; }
-@media (max-width: 680px) { .blog-search-row, .blog-comments > form { flex-wrap: wrap; } .blog-search-row input { flex-basis: 100%; } }
+@media (max-width: 680px) { .blog-search-row { flex-wrap: wrap; } .blog-search-row input { flex-basis: 100%; } }

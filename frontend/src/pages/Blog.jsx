@@ -195,7 +195,6 @@ export default function Blog() {
               onDelete={setPendingDelete}
               onTag={(tag) => { setTagFilter(tag); setView("feed"); }}
               onUpdated={(updated) => setPosts((current) => current.map((item) => item.id === updated.id ? { ...item, ...updated } : item))}
-              currentUserId={student?.id}
             />
           ))}
         </div>
@@ -221,10 +220,7 @@ export default function Blog() {
   );
 }
 
-function BlogCard({ post, isOwner, onEdit, onDelete, onTag, onUpdated, currentUserId }) {
-  const [comments, setComments] = useState([]);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [commentDraft, setCommentDraft] = useState("");
+function BlogCard({ post, isOwner, onEdit, onDelete, onTag, onUpdated }) {
   const [busy, setBusy] = useState(false);
   const toast = useToast();
   const author = post.author;
@@ -238,27 +234,6 @@ function BlogCard({ post, isOwner, onEdit, onDelete, onTag, onUpdated, currentUs
       onUpdated({ ...post, likedByMe: !post.likedByMe, likeCount: Math.max(0, (post.likeCount || 0) + (post.likedByMe ? -1 : 1)) });
     } catch (error) { toast.error(error.message || "Could not update like."); }
     finally { setBusy(false); }
-  };
-  const toggleComments = async () => {
-    const next = !commentsOpen;
-    setCommentsOpen(next);
-    if (next) {
-      try { setComments((await api.get(`/blogs/${post.id}/comments`)) || []); }
-      catch (error) { toast.error(error.message || "Could not load comments."); }
-    }
-  };
-  const addComment = async (event) => {
-    event.preventDefault();
-    if (!commentDraft.trim()) return;
-    try {
-      const comment = await api.post(`/blogs/${post.id}/comments`, { content: commentDraft.trim() });
-      setComments((current) => [...current, comment]);
-      setCommentDraft("");
-    } catch (error) { toast.error(error.message || "Could not add comment."); }
-  };
-  const removeComment = async (commentId) => {
-    try { await api.del(`/blogs/${post.id}/comments/${commentId}`); setComments((current) => current.filter((item) => item.id !== commentId)); }
-    catch (error) { toast.error(error.message || "Could not remove comment."); }
   };
   return (
     <article className="blog-card">
@@ -279,12 +254,7 @@ function BlogCard({ post, isOwner, onEdit, onDelete, onTag, onUpdated, currentUs
       {date && <small className="blog-card__date">{edited ? "Edited" : "Published"} {date}</small>}
       <div className="blog-interactions">
         <button type="button" className={post.likedByMe ? "is-liked" : ""} onClick={toggleLike} disabled={busy}>♥ {post.likeCount || 0}</button>
-        <button type="button" onClick={toggleComments}>{commentsOpen ? "Hide comments" : "Comments"}</button>
       </div>
-      {commentsOpen && <section className="blog-comments" aria-label="Comments">
-        {comments.map((comment) => <div className="blog-comment" key={comment.id}><div><strong>{comment.author.name || "Student"}</strong><small>{new Date(comment.createdAt).toLocaleDateString()}</small><p>{comment.content}</p></div>{(comment.author.id === currentUserId || isOwner) && <button type="button" onClick={() => removeComment(comment.id)} aria-label="Remove comment">×</button>}</div>)}
-        <form onSubmit={addComment}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} maxLength={2000} placeholder="Write a comment…" aria-label="Write a comment" /><button className="btn btn--sm btn--primary" type="submit">Comment</button></form>
-      </section>}
     </article>
   );
 }
