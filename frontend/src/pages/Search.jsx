@@ -199,7 +199,9 @@ function SearchResult({ student, busy, onConnect }) {
           <small>{meta || "VIT-AP student"}</small>
         </span>
       </Link>
-      {student.sharedTagCount > 0 && <span className="search-result__match">{student.sharedTagCount} shared</span>}
+      <span className={`search-result__match${student.sharedTagCount > 0 ? "" : " is-empty"}`} aria-hidden={student.sharedTagCount > 0 ? undefined : "true"}>
+        {student.sharedTagCount > 0 ? `${student.sharedTagCount} shared` : "—"}
+      </span>
       <SearchAction student={student} busy={busy} onConnect={onConnect} />
     </article>
   );

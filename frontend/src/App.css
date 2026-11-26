@@ -439,7 +439,7 @@
 .search-results__heading h2 { margin: 0; font-size: 19px; }
 .search-results__heading span { color: var(--muted); font-size: 12px; }
 .search-result-list { display: grid; }
-.search-result { display: grid; grid-template-columns: minmax(0, 1fr) auto 112px; align-items: center; gap: 16px; min-height: 76px; border-bottom: 1px solid var(--border); padding: 12px 6px; }
+.search-result { display: grid; grid-template-columns: minmax(0, 1fr) 90px 112px; align-items: center; gap: 16px; min-height: 76px; border-bottom: 1px solid var(--border); padding: 12px 6px; }
 .search-result__profile { display: flex; min-width: 0; align-items: center; gap: 14px; }
 .search-result__profile img { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; }
 .avatar-placeholder { display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font-weight: 800; }
@@ -449,7 +449,8 @@
 .search-result__profile strong { font-size: 14px; }
 .search-result__profile:hover strong { color: var(--accent-ink); }
 .search-result__profile small { margin-top: 3px; color: var(--muted); font-size: 12px; }
-.search-result__match { border-radius: 99px; padding: 6px 10px; background: var(--accent-soft); color: var(--accent-ink); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.search-result__match { width: 90px; justify-self: center; border-radius: 99px; padding: 6px 8px; background: var(--accent-soft); color: var(--accent-ink); font-size: 10px; font-weight: 800; text-align: center; white-space: nowrap; }
+.search-result__match.is-empty { visibility: hidden; }
 .search-result__action { display: inline-flex; width: 112px; min-height: 40px; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); color: var(--accent-contrast); font-size: 12px; font-weight: 800; text-decoration: none; }
 .search-result__action.is-connected, .search-result__action.is-requested { border-color: var(--border); background: var(--surface-raised); color: var(--muted); }
 .search-result__action.is-response { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-ink); }
