@@ -271,24 +271,28 @@ img { display: block; max-width: 100%; }
   justify-items: center;
   align-content: center;
   gap: 10px;
-  padding: 56px 24px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
+  min-height: 250px;
+  padding: clamp(34px, 6vw, 64px) 24px;
   text-align: center;
-  background: var(--bg-soft);
 }
-.empty-state__icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font-size: 26px; }
+.empty-state__icon { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 4px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font-size: 23px; }
 .empty-state h2, .empty-state h3 { margin: 0; font-size: 20px; }
 .empty-state p { max-width: 420px; color: var(--muted); font-size: 14px; }
 
-.loading { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 180px; color: var(--muted); font-size: 14px; }
-.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+.loading, .dashboard-loading { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 180px; color: var(--muted); font-size: 14px; }
+.spinner, .session-loading__spinner { display: inline-block; width: 24px; height: 24px; flex: 0 0 auto; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+.dashboard-loading { min-height: 160px; }
+.dashboard-loading .spinner, .dashboard-loading .session-loading__spinner { width: 22px; height: 22px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .alert { border-radius: var(--radius-sm); padding: 12px 15px; font-size: 13px; border: 1px solid transparent; }
 .alert--error { border-color: var(--danger-soft); background: var(--danger-soft); color: var(--danger); }
 .alert--success { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-ink); }
-.page-error { border-radius: var(--radius-sm); padding: 12px 15px; background: var(--danger-soft); color: var(--danger); font-size: 13px; }
+.page-error { border: 1px solid var(--danger-soft); border-radius: var(--radius-sm); padding: 12px 15px; background: var(--danger-soft); color: var(--danger); font-size: 13px; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner, .session-loading__spinner { animation-duration: 1.8s; }
+}
 
 .divider { height: 1px; background: var(--border); border: 0; margin: 0; }
 

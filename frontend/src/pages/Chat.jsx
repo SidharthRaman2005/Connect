@@ -363,7 +363,12 @@ export default function Chat() {
           )}
         </div>
       </header>
-      {error && <p role="alert" className="page-error">{error}</p>}
+      {error && (
+        <div role="alert" className="inbox-alert">
+          <span>{error}</span>
+          <button type="button" aria-label="Dismiss message" onClick={() => setError("")}>×</button>
+        </div>
+      )}
 
       <div className="inbox-layout">
         <aside className="inbox-sidebar" aria-label="Conversations">
@@ -388,9 +393,9 @@ export default function Chat() {
             {includeArchived ? "Showing archived" : "Show archived"}
           </button>
 
-          {loadingConversations ? <p className="inbox-muted">Loading…</p>
-            : conversations.length === 0 ? <p className="inbox-muted">Connect with a student to start chatting.</p>
-            : filteredConversations.length === 0 ? <p className="inbox-muted">No matching conversations.</p>
+          {loadingConversations ? <div className="inbox-sidebar-state" role="status"><span className="session-loading__spinner" />Loading chats…</div>
+            : conversations.length === 0 ? <div className="inbox-sidebar-state">Connect with a student to start chatting.</div>
+            : filteredConversations.length === 0 ? <div className="inbox-sidebar-state">No matching conversations.</div>
             : filteredConversations.map((conversation) => (
               <div className="inbox-conversation-wrap" key={conversation.other.id}>
                 <button
@@ -462,8 +467,8 @@ export default function Chat() {
                 <button type="button" onClick={() => loadHistory(selectedId, page + 1, true)}
                   disabled={loadingMessages} className="inbox-older">Load older messages</button>
               )}
-              {loadingMessages && visibleMessages.length === 0 ? <p className="inbox-muted">Loading messages…</p>
-                : visibleMessages.length === 0 ? <p className="inbox-empty">No messages yet. Say hello.</p>
+              {loadingMessages && visibleMessages.length === 0 ? <div className="inbox-thread-state" role="status"><span className="session-loading__spinner" />Loading messages…</div>
+                : visibleMessages.length === 0 ? <div className="inbox-thread-state inbox-thread-state--empty"><span aria-hidden="true">↗</span><strong>No messages yet</strong><p>Send a message to start the conversation.</p></div>
                 : visibleMessages.map((message) => {
                   const mine = message.senderId === me?.id;
                   const editing = editingId === message.id;
@@ -517,7 +522,9 @@ export default function Chat() {
             </form>
           </> : (
             <div className="inbox-empty-state">
-              {loadingConversations ? "Loading conversations…" : "Choose a connection to start chatting."}
+              <span aria-hidden="true">✉</span>
+              <strong>{loadingConversations ? "Loading conversations" : "Your conversations"}</strong>
+              <p>{loadingConversations ? "Your chats will appear here." : "Choose a connection to start chatting."}</p>
             </div>
           )}
         </section>
