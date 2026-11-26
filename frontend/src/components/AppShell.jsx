@@ -12,7 +12,6 @@ const navigation = [
   { to: "/collabs", label: "Collabs", icon: "✦" },
   { to: "/chat", label: "Chat", icon: "✉" },
   { to: "/blogs", label: "Blogs", icon: "▤" },
-  { to: "/profile", label: "Profile", icon: "○" },
 ];
 
 export default function AppShell() {

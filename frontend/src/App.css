@@ -574,8 +574,6 @@
 
 /* Safety, richer blog actions, and remaining collab management controls. */
 .user-safety-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-.user-safety-report { display: grid; gap: 8px; flex-basis: 100%; min-width: 240px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.user-safety-report .textarea { min-height: 76px; }
 .blocked-user-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 10px 0; }
 .blog-search-row { display: flex; gap: 10px; margin: 22px 0; }
 .blog-search-row input { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; color: var(--text); background: var(--surface); }

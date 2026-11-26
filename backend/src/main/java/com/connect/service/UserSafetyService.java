@@ -3,17 +3,13 @@ package com.connect.service;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.connect.dto.ReportUserRequest;
 import com.connect.dto.StudentBrief;
-import com.connect.dto.StudentReportDto;
 import com.connect.entity.Student;
 import com.connect.entity.StudentBlock;
-import com.connect.entity.StudentReport;
 import com.connect.exception.BadRequestException;
 import com.connect.exception.ResourceNotFoundException;
 import com.connect.repository.ChatMessageRepository;
 import com.connect.repository.StudentBlockRepository;
-import com.connect.repository.StudentReportRepository;
 import com.connect.repository.StudentRepository;
 
 @Service
@@ -21,15 +17,12 @@ public class UserSafetyService {
     private final StudentBlockRepository blockRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final NotificationService notificationService;
-    private final StudentReportRepository reportRepository;
     private final StudentRepository studentRepository;
 
     public UserSafetyService(StudentBlockRepository blockRepository, ChatMessageRepository chatMessageRepository,
-                             NotificationService notificationService, StudentReportRepository reportRepository,
-                             StudentRepository studentRepository) {
+                             NotificationService notificationService, StudentRepository studentRepository) {
         this.blockRepository = blockRepository; this.chatMessageRepository = chatMessageRepository;
         this.notificationService = notificationService;
-        this.reportRepository = reportRepository;
         this.studentRepository = studentRepository;
     }
 
@@ -59,19 +52,6 @@ public class UserSafetyService {
     public List<StudentBrief> blocked(Long actorId) {
         return blockRepository.findByBlockerIdOrderByCreatedAtDesc(actorId).stream()
                 .map(block -> StudentBrief.from(block.getBlocked())).toList();
-    }
-
-    @Transactional
-    public StudentReportDto report(Long reporterId, Long targetId, ReportUserRequest request) {
-        if (reporterId.equals(targetId)) throw new BadRequestException("You cannot report yourself.");
-        StudentReport report = reportRepository.save(new StudentReport(load(reporterId), load(targetId),
-                request.reason().trim(), request.details() == null ? null : request.details().trim()));
-        return StudentReportDto.from(report);
-    }
-
-    @Transactional(readOnly = true)
-    public List<StudentReportDto> myReports(Long reporterId) {
-        return reportRepository.findByReporterIdOrderByCreatedAtDesc(reporterId).stream().map(StudentReportDto::from).toList();
     }
 
     @Transactional(readOnly = true)
