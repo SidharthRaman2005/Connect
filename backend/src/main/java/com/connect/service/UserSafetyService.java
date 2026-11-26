@@ -11,8 +11,7 @@ import com.connect.entity.StudentBlock;
 import com.connect.entity.StudentReport;
 import com.connect.exception.BadRequestException;
 import com.connect.exception.ResourceNotFoundException;
-import com.connect.exception.ForbiddenException;
-import com.connect.repository.ConnectionRepository;
+import com.connect.repository.ChatMessageRepository;
 import com.connect.repository.StudentBlockRepository;
 import com.connect.repository.StudentReportRepository;
 import com.connect.repository.StudentRepository;
@@ -20,23 +19,24 @@ import com.connect.repository.StudentRepository;
 @Service
 public class UserSafetyService {
     private final StudentBlockRepository blockRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final NotificationService notificationService;
     private final StudentReportRepository reportRepository;
     private final StudentRepository studentRepository;
-    private final ConnectionRepository connectionRepository;
 
-    public UserSafetyService(StudentBlockRepository blockRepository, StudentReportRepository reportRepository,
-                             StudentRepository studentRepository, ConnectionRepository connectionRepository) {
-        this.blockRepository = blockRepository; this.reportRepository = reportRepository;
-        this.studentRepository = studentRepository; this.connectionRepository = connectionRepository;
+    public UserSafetyService(StudentBlockRepository blockRepository, ChatMessageRepository chatMessageRepository,
+                             NotificationService notificationService, StudentReportRepository reportRepository,
+                             StudentRepository studentRepository) {
+        this.blockRepository = blockRepository; this.chatMessageRepository = chatMessageRepository;
+        this.notificationService = notificationService;
+        this.reportRepository = reportRepository;
+        this.studentRepository = studentRepository;
     }
 
-    public boolean isBlockedEitherWay(Long first, Long second) {
-        return first != null && second != null && !first.equals(second)
-                && blockRepository.existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(first, second, second, first);
-    }
-
-    public void requireNotBlocked(Long first, Long second) {
-        if (isBlockedEitherWay(first, second)) throw new ForbiddenException("This action is unavailable because one of you has blocked the other.");
+    /** True only when the first student has blocked the second. */
+    public boolean hasBlocked(Long blockerId, Long targetId) {
+        return blockerId != null && targetId != null && !blockerId.equals(targetId)
+                && blockRepository.existsByBlockerIdAndBlockedId(blockerId, targetId);
     }
 
     @Transactional
@@ -46,7 +46,8 @@ public class UserSafetyService {
         if (!blockRepository.existsByBlockerIdAndBlockedId(actorId, targetId)) {
             blockRepository.save(new StudentBlock(actor, target));
         }
-        connectionRepository.deleteAll(connectionRepository.findBetween(actorId, targetId));
+        chatMessageRepository.hidePendingForRecipient(targetId, actorId);
+        notificationService.markMessageNotificationRead(actorId, targetId);
     }
 
     @Transactional
@@ -74,7 +75,7 @@ public class UserSafetyService {
     }
 
     @Transactional(readOnly = true)
-    public List<Long> blockedIds(Long studentId) { return blockRepository.findBlockedEitherWay(studentId); }
+    public List<Long> blockedByMeIds(Long studentId) { return blockRepository.findBlockedIdsByBlockerId(studentId); }
 
     private Student load(Long id) {
         return studentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Student not found."));

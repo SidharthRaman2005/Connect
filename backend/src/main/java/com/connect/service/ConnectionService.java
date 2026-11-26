@@ -31,16 +31,13 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final StudentRepository studentRepository;
     private final NotificationService notificationService;
-    private final UserSafetyService safetyService;
 
     public ConnectionService(ConnectionRepository connectionRepository,
                              StudentRepository studentRepository,
-                             NotificationService notificationService,
-                             UserSafetyService safetyService) {
+                             NotificationService notificationService) {
         this.connectionRepository = connectionRepository;
         this.studentRepository = studentRepository;
         this.notificationService = notificationService;
-        this.safetyService = safetyService;
     }
 
     /** Sends a connection request from the caller to another student. */
@@ -49,7 +46,6 @@ public class ConnectionService {
         if (meId.equals(addresseeId)) {
             throw new BadRequestException("You cannot connect with yourself.");
         }
-        safetyService.requireNotBlocked(meId, addresseeId);
         Student me = load(meId);
         Student other = load(addresseeId);
 
@@ -87,7 +83,6 @@ public class ConnectionService {
         if (!c.getAddressee().getId().equals(meId)) {
             throw new ForbiddenException("Only the addressee can respond to this request.");
         }
-        safetyService.requireNotBlocked(c.getRequester().getId(), c.getAddressee().getId());
         if (c.getStatus() != ConnectionStatus.PENDING) {
             throw new BadRequestException("This request is no longer pending.");
         }

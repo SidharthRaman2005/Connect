@@ -101,7 +101,7 @@ export default function StudentProfile() {
               {requested ? "Request sent ✓" : connecting ? "Sending…" : "Connect"}
             </button>
             <Link className="btn btn--secondary" to="/discover">Discover more</Link>
-            <UserSafetyActions studentId={profile.id} onBlocked={() => window.history.back()} />
+            <UserSafetyActions studentId={profile.id} showBlock={false} showReport />
           </div>
         </div>
         <div className="profile-view__stats">

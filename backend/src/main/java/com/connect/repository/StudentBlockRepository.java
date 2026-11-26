@@ -10,6 +10,8 @@ public interface StudentBlockRepository extends JpaRepository<StudentBlock, Long
     boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
     boolean existsByBlockerIdAndBlockedIdOrBlockerIdAndBlockedId(Long a1, Long b1, Long a2, Long b2);
     List<StudentBlock> findByBlockerIdOrderByCreatedAtDesc(Long blockerId);
+    @Query("select b.blocked.id from StudentBlock b where b.blocker.id = :blockerId")
+    List<Long> findBlockedIdsByBlockerId(@Param("blockerId") Long blockerId);
     void deleteByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
     @Query("select case when b.blocker.id = :me then b.blocked.id else b.blocker.id end from StudentBlock b where b.blocker.id = :me or b.blocked.id = :me")
     List<Long> findBlockedEitherWay(@Param("me") Long studentId);

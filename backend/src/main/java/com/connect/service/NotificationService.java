@@ -23,18 +23,14 @@ import com.connect.repository.NotificationRepository;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final ApplicationEventPublisher events;
-    private final UserSafetyService safetyService;
 
-    public NotificationService(NotificationRepository notificationRepository, ApplicationEventPublisher events,
-                               UserSafetyService safetyService) {
+    public NotificationService(NotificationRepository notificationRepository, ApplicationEventPublisher events) {
         this.notificationRepository = notificationRepository;
         this.events = events;
-        this.safetyService = safetyService;
     }
 
     public void create(Student recipient, Student actor, NotificationType type,
                        Long referenceId, String message) {
-        if (actor != null && safetyService.isBlockedEitherWay(recipient.getId(), actor.getId())) return;
         Notification saved = notificationRepository.save(new Notification(recipient, actor, type, referenceId, message));
         publishCreated(saved);
     }
@@ -46,7 +42,6 @@ public class NotificationService {
      */
     @Transactional
     public void recordMessage(Student recipient, Student actor) {
-        if (safetyService.isBlockedEitherWay(recipient.getId(), actor.getId())) return;
         String text = actor.getName() + " sent you a message.";
         Optional<Notification> existing = notificationRepository
                 .findFirstByRecipientIdAndActorIdAndTypeAndReadAtIsNull(
@@ -76,12 +71,9 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public NotificationInboxDto inbox(Long studentId, int page, int size) {
-        List<Long> excludedActors = safetyService.blockedIds(studentId);
-        if (excludedActors.isEmpty()) excludedActors = List.of(-1L);
-        Page<Notification> result = notificationRepository
-                .findInboxExcludingActors(studentId, excludedActors, PageRequest.of(page, size));
+        Page<Notification> result = notificationRepository.findInbox(studentId, PageRequest.of(page, size));
         List<NotificationDto> content = result.getContent().stream().map(NotificationDto::from).toList();
-        long unreadCount = notificationRepository.countUnreadExcludingActors(studentId, excludedActors);
+        long unreadCount = notificationRepository.countByRecipientIdAndReadAtIsNull(studentId);
         return new NotificationInboxDto(content, result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages(), unreadCount);
     }

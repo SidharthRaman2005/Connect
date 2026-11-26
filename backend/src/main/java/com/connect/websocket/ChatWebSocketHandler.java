@@ -56,15 +56,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 return;
             }
             if (request.isRead()) {
-                chatService.markRead(me, request.recipientId());
-                sendToStudent(request.recipientId(), ChatEventDto.read(me));
+                boolean marked = chatService.markRead(me, request.recipientId());
+                if (marked && chatService.canReceiveMessage(request.recipientId(), me)) {
+                    sendToStudent(request.recipientId(), ChatEventDto.read(me));
+                }
                 return;
             }
             boolean recipientOnline = isOnline(request.recipientId());
             ChatMessageDto message = chatService.send(me, request.recipientId(), request.content(), recipientOnline);
             ChatEventDto event = ChatEventDto.message(message, request.clientId());
             sendToStudent(me, event);
-            sendToStudent(request.recipientId(), event);
+            if (chatService.canReceiveMessage(request.recipientId(), me)) sendToStudent(request.recipientId(), event);
         } catch (Exception exception) {
             sendError(session, exception.getMessage() == null ? "Message could not be sent." : exception.getMessage());
         }
@@ -74,7 +76,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void broadcastMessage(ChatMessageDto message) {
         ChatEventDto event = ChatEventDto.message(message);
         sendToStudent(message.senderId(), event);
-        sendToStudent(message.recipientId(), event);
+        if (chatService.canReceiveMessage(message.recipientId(), message.senderId())) {
+            sendToStudent(message.recipientId(), event);
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)

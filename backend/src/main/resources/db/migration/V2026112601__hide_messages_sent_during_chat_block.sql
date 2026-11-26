@@ -1,0 +1,2 @@
+ALTER TABLE chat_messages
+    ADD COLUMN IF NOT EXISTS hidden_from_recipient BOOLEAN NOT NULL DEFAULT FALSE;

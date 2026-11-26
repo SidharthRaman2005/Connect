@@ -61,16 +61,24 @@ public class ChatService {
         String content = clean(rawContent);
         Student sender = load(senderId);
         Student recipient = load(recipientId);
-        safetyService.requireNotBlocked(senderId, recipientId);
         requireConnected(senderId, recipientId);
+        boolean recipientBlockedSender = safetyService.hasBlocked(recipientId, senderId);
+        boolean deliverToRecipient = recipientOnline && !recipientBlockedSender;
         ChatMessage message = new ChatMessage(sender, recipient, content);
-        if (recipientOnline) message.markDelivered();
+        if (recipientBlockedSender) message.hideFromRecipient();
+        if (deliverToRecipient) message.markDelivered();
         ChatMessage saved = messageRepository.save(message);
 
         // Offline recipients get one plain notification. Online recipients only
         // get the unread dot in the chat navigation, driven by /chat/unread.
-        if (!recipientOnline) notificationService.recordMessage(recipient, sender);
+        if (!recipientBlockedSender && !recipientOnline) notificationService.recordMessage(recipient, sender);
         return ChatMessageDto.from(saved);
+    }
+
+    /** A blocked sender may submit a message, but it is never delivered to this recipient. */
+    @Transactional(readOnly = true)
+    public boolean canReceiveMessage(Long recipientId, Long senderId) {
+        return !safetyService.hasBlocked(recipientId, senderId);
     }
 
     /** Marks pending messages as delivered when their recipient reconnects. */
@@ -79,7 +87,8 @@ public class ChatService {
         List<ChatMessage> pending = messageRepository
                 .findByRecipientIdAndDeliveredAtIsNullAndReadAtIsNull(studentId);
         if (pending.isEmpty()) return List.of();
-        return pending.stream().filter(message -> !safetyService.isBlockedEitherWay(studentId, message.getSender().getId())).map(message -> {
+        return pending.stream().filter(message -> !message.isHiddenFromRecipient()
+                && !safetyService.hasBlocked(studentId, message.getSender().getId())).map(message -> {
             message.markDelivered();
             return ChatMessageDto.from(messageRepository.save(message));
         }).toList();
@@ -87,9 +96,9 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public long unreadCount(Long studentId) {
-        long total = messageRepository.countByRecipientIdAndReadAtIsNull(studentId);
-        List<Long> blocked = safetyService.blockedIds(studentId);
-        return blocked.isEmpty() ? total : Math.max(0, total - messageRepository.countByRecipientIdAndSenderIdInAndReadAtIsNull(studentId, blocked));
+        long total = messageRepository.countByRecipientIdAndReadAtIsNullAndHiddenFromRecipientFalse(studentId);
+        List<Long> blocked = safetyService.blockedByMeIds(studentId);
+        return blocked.isEmpty() ? total : Math.max(0, total - messageRepository.countByRecipientIdAndSenderIdInAndReadAtIsNullAndHiddenFromRecipientFalse(studentId, blocked));
     }
 
     @Transactional(readOnly = true)
@@ -126,11 +135,13 @@ public class ChatService {
     }
 
     @Transactional
-    public void markRead(Long meId, Long otherId) {
+    public boolean markRead(Long meId, Long otherId) {
         requireConnected(meId, otherId);
+        if (safetyService.hasBlocked(meId, otherId)) return false;
         Instant now = Instant.now();
         messageRepository.markConversationRead(otherId, meId, now);
         notificationService.markMessageNotificationRead(meId, otherId);
+        return true;
     }
 
     @Transactional(readOnly = true)
@@ -139,7 +150,6 @@ public class ChatService {
         for (Connection connection : connectionRepository.findByStudentAndStatus(meId, ConnectionStatus.ACCEPTED)) {
             Student other = connection.getRequester().getId().equals(meId)
                     ? connection.getAddressee() : connection.getRequester();
-            if (safetyService.isBlockedEitherWay(meId, other.getId())) continue;
             ChatPreference preference = preferenceRepository.findByStudentIdAndOtherId(meId, other.getId()).orElse(null);
             if (preference != null && preference.isArchived() && !includeArchived) continue;
             boolean muted = preference != null && preference.isMuted();
@@ -150,8 +160,8 @@ public class ChatService {
                     ? messageRepository.findConversation(meId, other.getId(), PageRequest.of(0, 1))
                     : messageRepository.findConversationAfter(meId, other.getId(), after, PageRequest.of(0, 1));
             ChatMessage last = lastPage.hasContent() ? lastPage.getContent().get(0) : null;
-            long unread = after == null
-                    ? messageRepository.countBySenderIdAndRecipientIdAndReadAtIsNull(other.getId(), meId)
+            long unread = safetyService.hasBlocked(meId, other.getId()) ? 0 : after == null
+                    ? messageRepository.countBySenderIdAndRecipientIdAndReadAtIsNullAndHiddenFromRecipientFalse(other.getId(), meId)
                     : messageRepository.countUnreadAfter(other.getId(), meId, after);
 
             conversations.add(new ChatConversationDto(
@@ -213,7 +223,6 @@ public class ChatService {
 
     private void requireConnected(Long firstId, Long secondId) {
         if (firstId.equals(secondId)) throw new BadRequestException("You cannot chat with yourself.");
-        safetyService.requireNotBlocked(firstId, secondId);
         boolean connected = connectionRepository.findBetween(firstId, secondId).stream()
                 .anyMatch(connection -> connection.getStatus() == ConnectionStatus.ACCEPTED);
         if (!connected) throw new ForbiddenException("Chat is available only between connected students.");

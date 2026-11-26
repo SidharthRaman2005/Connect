@@ -304,7 +304,7 @@ export default function Profile() {
         onCancel={() => setConfirmRemove(false)}
       />
       <section className="profile-section blocked-users-section">
-        <div className="profile-section__head"><h2>Blocked students</h2><span>Blocked accounts are hidden from discovery, chat, and notifications.</span></div>
+        <div className="profile-section__head"><h2>Blocked students</h2><span>Blocking only filters their messages from your chat; it does not change profile visibility or your connection.</span></div>
         <div className="profile-section__body">
           {blockedError && <p className="page-error">{blockedError}</p>}
           {blockedUsers.length ? blockedUsers.map((person) => <div className="blocked-user-row" key={person.id}><span>{person.name || person.email || "Student"}</span><button type="button" className="btn btn--sm btn--secondary" onClick={() => unblockUser(person.id)}>Unblock</button></div>) : !blockedError && <p className="connection-empty">You have not blocked anyone.</p>}

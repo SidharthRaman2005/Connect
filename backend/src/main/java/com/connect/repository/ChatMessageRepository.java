@@ -20,8 +20,13 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     @Query("""
             select m from ChatMessage m
-            where (m.sender.id = :a and m.recipient.id = :b)
-               or (m.sender.id = :b and m.recipient.id = :a)
+            where ((m.sender.id = :a and m.recipient.id = :b)
+               or (m.sender.id = :b and m.recipient.id = :a))
+              and (m.hiddenFromRecipient = false or m.sender.id = :a)
+              and not (m.sender.id = :b and exists (
+                  select block.id from StudentBlock block
+                  where block.blocker.id = :a and block.blocked.id = :b
+              ))
             order by m.sentAt desc, m.id desc
             """)
     Page<ChatMessage> findConversation(@Param("a") Long a, @Param("b") Long b, Pageable pageable);
@@ -30,6 +35,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             select m from ChatMessage m
             where ((m.sender.id = :a and m.recipient.id = :b)
                or (m.sender.id = :b and m.recipient.id = :a))
+              and (m.hiddenFromRecipient = false or m.sender.id = :a)
+              and not (m.sender.id = :b and exists (
+                  select block.id from StudentBlock block
+                  where block.blocker.id = :a and block.blocked.id = :b
+              ))
               and m.sentAt > :after
             order by m.sentAt desc, m.id desc
             """)
@@ -43,14 +53,20 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     long countByRecipientIdAndReadAtIsNull(Long recipientId);
 
+    long countByRecipientIdAndReadAtIsNullAndHiddenFromRecipientFalse(Long recipientId);
+
     long countByRecipientIdAndSenderIdInAndReadAtIsNull(Long recipientId, java.util.Collection<Long> senderIds);
 
+    long countByRecipientIdAndSenderIdInAndReadAtIsNullAndHiddenFromRecipientFalse(Long recipientId, java.util.Collection<Long> senderIds);
+
     long countBySenderIdAndRecipientIdAndReadAtIsNull(Long senderId, Long recipientId);
+
+    long countBySenderIdAndRecipientIdAndReadAtIsNullAndHiddenFromRecipientFalse(Long senderId, Long recipientId);
 
     @Query("""
             select count(m) from ChatMessage m
             where m.sender.id = :sender and m.recipient.id = :recipient
-              and m.readAt is null and m.sentAt > :after
+              and m.readAt is null and m.hiddenFromRecipient = false and m.sentAt > :after
             """)
     long countUnreadAfter(@Param("sender") Long senderId, @Param("recipient") Long recipientId,
                           @Param("after") Instant after);
@@ -58,8 +74,14 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Modifying
     @Query("""
             update ChatMessage m set m.readAt = :readAt
-            where m.sender.id = :sender and m.recipient.id = :recipient and m.readAt is null
+            where m.sender.id = :sender and m.recipient.id = :recipient
+              and m.readAt is null and m.hiddenFromRecipient = false
             """)
     int markConversationRead(@Param("sender") Long senderId, @Param("recipient") Long recipientId,
                              @Param("readAt") Instant readAt);
+
+    /** Hide any messages queued for delivery when a recipient blocks their sender. */
+    @Modifying
+    @Query("update ChatMessage m set m.hiddenFromRecipient = true where m.sender.id = :sender and m.recipient.id = :recipient and m.deliveredAt is null and m.readAt is null")
+    int hidePendingForRecipient(@Param("sender") Long senderId, @Param("recipient") Long recipientId);
 }

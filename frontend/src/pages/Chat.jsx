@@ -460,7 +460,7 @@ export default function Chat() {
                 <Link className="inbox-profile-link" to={`/students/${selected.other.id}`} aria-label="View profile">
                   View profile <span>→</span>
                 </Link>
-                <UserSafetyActions showReport={false} studentId={selected.other.id} onBlocked={() => { setConversations((items) => items.filter((item) => item.other.id !== selected.other.id)); setSelectedId(null); }} />
+                <UserSafetyActions studentId={selected.other.id} />
               </div>
             </div>
 

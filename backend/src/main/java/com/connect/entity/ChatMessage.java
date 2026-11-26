@@ -53,6 +53,10 @@ public class ChatMessage {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    /** Messages sent while the recipient had blocked this sender remain hidden if later unblocked. */
+    @Column(name = "hidden_from_recipient", nullable = false, columnDefinition = "boolean default false")
+    private boolean hiddenFromRecipient;
+
     protected ChatMessage() {}
 
     public ChatMessage(Student sender, Student recipient, String content) {
@@ -76,8 +80,10 @@ public class ChatMessage {
     public Instant getEditedAt() { return editedAt; }
     public Instant getDeletedAt() { return deletedAt; }
     public boolean isDeleted() { return deletedAt != null; }
+    public boolean isHiddenFromRecipient() { return hiddenFromRecipient; }
 
     public void setReadAt(Instant readAt) { this.readAt = readAt; }
+    public void hideFromRecipient() { this.hiddenFromRecipient = true; }
 
     /** Records that the recipient's socket was open when the message arrived. */
     public void markDelivered() {
