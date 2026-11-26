@@ -79,7 +79,12 @@ export default function AppShell() {
               <small>VIT-AP student</small>
             </span>
           </button>
-          <button type="button" className="app-logout" onClick={handleLogout}>Sign out</button>
+          <button type="button" className="app-logout" onClick={handleLogout} aria-label="Sign out" title="Sign out">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+              <path d="M13 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H13" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10 12h10m-4-4 4 4-4 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </aside>
 
