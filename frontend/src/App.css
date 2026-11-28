@@ -678,6 +678,70 @@
 .app-theme-toggle, .notification-bell__trigger, .inbox-profile-link { transition: border-color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard); }
 .app-theme-toggle:hover, .notification-bell__trigger:hover { transform: translateY(-1px); }
 
+/* Refined shell dividers: softer than a flat border while retaining clear layout edges. */
+.app-sidebar {
+  position: sticky;
+  isolation: isolate;
+  border-right: 0;
+}
+.app-sidebar > * { position: relative; z-index: 1; }
+.app-sidebar::after {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--border) 14%, color-mix(in srgb, var(--accent) 28%, var(--border)) 50%, var(--border) 86%, transparent);
+  pointer-events: none;
+  content: "";
+}
+.app-sidebar__footer {
+  position: relative;
+  border-top: 0;
+}
+.app-sidebar__footer::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 18%, color-mix(in srgb, var(--accent) 24%, var(--border)) 50%, var(--border) 82%, transparent);
+  content: "";
+}
+.app-topbar {
+  position: relative;
+  border-bottom: 0;
+}
+.app-topbar::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 12%, color-mix(in srgb, var(--accent) 24%, var(--border)) 50%, var(--border) 88%, transparent);
+  content: "";
+}
+.app-nav__item--active {
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+@media (max-width: 900px) {
+  .app-mobile-nav {
+    position: relative;
+    border-bottom: 0;
+  }
+  .app-mobile-nav::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border) 12%, color-mix(in srgb, var(--accent) 24%, var(--border)) 50%, var(--border) 88%, transparent);
+    content: "";
+  }
+}
+
 @keyframes card-enter {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

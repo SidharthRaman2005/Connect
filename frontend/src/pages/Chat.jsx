@@ -49,8 +49,12 @@ export default function Chat() {
 
   const loadConversations = useCallback(async () => {
     try {
-      const data = await api.get(`/chat/conversations?includeArchived=${includeArchived}`);
-      setConversations(data || []);
+      const response = await api.get(`/chat/conversations?includeArchived=${includeArchived}`);
+      // Keep an unexpected API payload from crashing the inbox during render.
+      const data = Array.isArray(response)
+        ? response.filter((item) => item?.other?.id != null)
+        : [];
+      setConversations(data);
       setSelectedId((current) => {
         if (current && data.some((item) => item.other.id === current)) return current;
         const requested = Number(searchParams.get("with"));
@@ -108,13 +112,14 @@ export default function Chat() {
     setError("");
     try {
       const result = await api.get(`/chat/${studentId}/messages?page=${requestedPage}&size=${PAGE_SIZE}`);
+      const content = Array.isArray(result?.content) ? result.content : [];
       setMessages((previous) => {
-        const combined = older ? [...result.content, ...previous] : result.content;
+        const combined = older ? [...content, ...previous] : content;
         return [...new Map(combined.map((message) => [message.id, message])).values()];
       });
       setHistoryForId(studentId);
-      setPage(result.page);
-      setTotalPages(result.totalPages);
+      setPage(Number.isFinite(result?.page) ? result.page : requestedPage);
+      setTotalPages(Number.isFinite(result?.totalPages) ? result.totalPages : 0);
       await markConversationRead(studentId);
     } catch (caught) {
       setMessages([]);
@@ -335,13 +340,13 @@ export default function Chat() {
     }
   };
 
-  const selected = conversations.find((item) => item.other.id === selectedId);
+  const selected = conversations.find((item) => item?.other?.id === selectedId);
   const visibleMessages = historyForId === selectedId ? messages : [];
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
     if (!query) return conversations;
     return conversations.filter((conversation) =>
-      `${conversation.other.name || ""} ${conversation.other.branch || ""}`.toLowerCase().includes(query));
+      `${conversation.other?.name || ""} ${conversation.other?.branch || ""}`.toLowerCase().includes(query));
   }, [conversationSearch, conversations]);
 
   const statusLabel = (socketState === "connected" ? "Connected"
@@ -547,9 +552,9 @@ export default function Chat() {
 }
 
 function Avatar({ student }) {
-  return hasLocalMedia(student.pictureUrl) ? (
+  return hasLocalMedia(student?.pictureUrl) ? (
     <img className="inbox-avatar avatar--md" src={resolveMediaUrl(student.pictureUrl)} alt="" referrerPolicy="no-referrer" />
   ) : (
-    <span className="inbox-avatar inbox-avatar--empty avatar--md">{(student.name || "?").charAt(0)}</span>
+    <span className="inbox-avatar inbox-avatar--empty avatar--md">{(student?.name || "?").charAt(0)}</span>
   );
 }

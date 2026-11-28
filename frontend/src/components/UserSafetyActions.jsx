@@ -42,11 +42,11 @@ export default function UserSafetyActions({ studentId }) {
 
   return <>
     <div className="user-safety-actions">
-      {showBlock && (blocked ? (
+      {blocked ? (
         <button className="btn btn--sm btn--secondary" type="button" onClick={unblock} disabled={busy}>Unblock</button>
       ) : (
         <button className="btn btn--sm btn--secondary" type="button" onClick={() => setBlockConfirmOpen(true)} disabled={busy}>Block</button>
-      ))}
+      )}
     </div>
     <ConfirmDialog
       open={blockConfirmOpen}
