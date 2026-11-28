@@ -725,6 +725,35 @@
 .app-nav__item--active {
   box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent);
 }
+.app-sidebar::after {
+  background-image:
+    linear-gradient(180deg, transparent, var(--border) 14%, color-mix(in srgb, var(--accent) 28%, var(--border)) 50%, var(--border) 86%, transparent),
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent) 36%, color-mix(in srgb, var(--accent) 88%, white) 50%, color-mix(in srgb, var(--accent) 45%, transparent) 64%, transparent);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 22%;
+  background-position: center, 0 -28%;
+  animation: nav-border-light-vertical 6s ease-in-out infinite;
+}
+.app-sidebar__footer::before,
+.app-topbar::after,
+.app-mobile-nav::after {
+  background-image:
+    linear-gradient(90deg, transparent, var(--border) 12%, color-mix(in srgb, var(--accent) 24%, var(--border)) 50%, var(--border) 88%, transparent),
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent) 36%, color-mix(in srgb, var(--accent) 88%, white) 50%, color-mix(in srgb, var(--accent) 45%, transparent) 64%, transparent);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 24% 100%;
+  background-position: center, -32% 0;
+  animation: nav-border-light-horizontal 7s ease-in-out infinite;
+}
+.app-sidebar__footer::before { animation-delay: 1.6s; }
+@keyframes nav-border-light-horizontal {
+  0%, 12% { background-position: center, -32% 0; }
+  88%, 100% { background-position: center, 132% 0; }
+}
+@keyframes nav-border-light-vertical {
+  0%, 12% { background-position: center, 0 -28%; }
+  88%, 100% { background-position: center, 0 128%; }
+}
 
 @media (max-width: 900px) {
   .app-mobile-nav {
@@ -739,6 +768,14 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--border) 12%, color-mix(in srgb, var(--accent) 24%, var(--border)) 50%, var(--border) 88%, transparent);
     content: "";
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar::after,
+  .app-sidebar__footer::before,
+  .app-topbar::after,
+  .app-mobile-nav::after {
+    animation: none;
   }
 }
 
